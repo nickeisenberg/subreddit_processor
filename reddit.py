@@ -1,7 +1,6 @@
 import os
 import re
 import string
-
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
 from collections.abc import Iterator
@@ -131,6 +130,8 @@ def get_comments_from_submission_id(reddit: Reddit,
                                     replace_more_limit=0):
     submission: Submission = reddit.submission(submission_id)
     return  get_comments_from_submission(submission, replace_more_limit)
+
+
 
 
 if __name__ == "__main__":
