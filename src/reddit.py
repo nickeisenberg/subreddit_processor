@@ -132,12 +132,8 @@ def get_comments_from_submission_id(reddit: Reddit,
     return  get_comments_from_submission(submission, replace_more_limit)
 
 
-
-
 if __name__ == "__main__":
     pass
-
-import os
 
 x = Reddit(
     client_id=os.environ["PRAW_CLIENT_ID"],
