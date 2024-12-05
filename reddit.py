@@ -129,36 +129,8 @@ def get_comments_from_submission_list(submission_list: list[Submission],
 def get_comments_from_submission_id(reddit: Reddit,
                                     submission_id: list[str],
                                     replace_more_limit=0):
-
     submission: Submission = reddit.submission(submission_id)
-    _ = submission.comments.replace_more(limit=replace_more_limit)
-
-    return  get_comments_from_submission(submission)
-
-
-def get_replies_of_comment(submission_list: list[Subreddit],
-                           submission_comments,
-                           no_of_replies=10):
-
-    print('starting comments replies')
-
-    submissions_comments_replies = {sub: {} for sub in submission_list}
-
-    for sub in submission_list:
-        comments_replies = {com: [] for com in submission_comments[sub]}
-        count_c = 1
-        for com in submission_comments[sub]:
-            print(f'COMMENT {count_c}')
-            replies = com.replies
-            replies.replace_more(limit=None)
-            replies = replies[: no_of_replies]
-            for reply in replies:
-                comments_replies[com].append(reply)
-            count_c += 1
-
-        submissions_comments_replies[sub] = comments_replies
-
-    return submissions_comments_replies
+    return  get_comments_from_submission(submission, replace_more_limit)
 
 
 if __name__ == "__main__":
