@@ -181,8 +181,7 @@ submission_list = get_submission_list_by_search(
 
 comments = get_comments_from_submission(submission_list[0])
 
-count = 0
-for com in comments:
-    if "btc" in remove_all_non_asci(com.body):
-        count += 1
-print(count)
+for comment in comments:
+    com = lower_text_and_remove_all_non_asci(comment.body)
+    if "btc" in com:
+        print(com)
