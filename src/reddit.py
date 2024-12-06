@@ -1,6 +1,7 @@
 import os
 import re
 import string
+import datetime as dt
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
 from collections.abc import Iterator
@@ -132,6 +133,10 @@ def get_comments_from_submission_id(reddit: Reddit,
     return  get_comments_from_submission(submission, replace_more_limit)
 
 
+def make_dataset(root: str):
+    pass
+
+
 if __name__ == "__main__":
     pass
 
@@ -148,9 +153,14 @@ submission_list = get_submission_list_by_search(
     "Daily Crypto Discussion",
 )
 
-comments = get_comments_from_submission(submission_list[0])
+submission = submission_list[4]
 
-for comment in comments:
-    com = lower_text_and_remove_all_non_asci(comment.body)
-    if "btc" in com:
-        print(com)
+comments = get_comments_from_submission(submission)
+
+try:
+    dt.datetime.strptime(
+        submission.title.split('Daily Crypto Discussion - ')[1][:-8],
+        "%B %d, %Y"
+    )
+except:
+    print("cant do")
