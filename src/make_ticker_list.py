@@ -1,7 +1,6 @@
 import re
 from pycoingecko import CoinGeckoAPI
 
-
 def get_ticker_and_name_map():
     sym_to_name = {}
     name_to_sym = {}
@@ -33,9 +32,8 @@ def extract_valid_tickers(sentence, symbol_to_name_map, name_to_symbol_map):
 
 
 # Example sentence
-sentence = "Investing in BTC, DOGE, cardano, and some unknown currency like ABCD."
+sentence = "Investing in, btc, Bitcoin, DOGE, cardano, and some unknown currency like ABCD."
 
 stn, nts = get_ticker_and_name_map()
 result = extract_valid_tickers(sentence, stn, nts)
-
 print(result)
