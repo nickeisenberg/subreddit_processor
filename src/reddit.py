@@ -4,34 +4,6 @@ import string
 import datetime as dt
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
-from collections.abc import Iterator
-
-
-class RedditClient:
-    def __init__(self, client_id: str, client_secret: str, user_agent: str):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.user_agent = user_agent
-
-        self._reddit = Reddit(
-            client_id=client_id,
-            client_secret=client_secret,
-            user_agent=user_agent
-        )
-
-    def get_submissions_by_subreddit_search(self,
-                                           subreddit_name: str, 
-                                           search: str,
-                                           num_submissions: int,
-                                           sort: str = "revelance") -> list[Submission]:
-
-        subreddit: Subreddit = self._reddit.subreddit(subreddit_name)
-        submissions:Iterator[Submission] = subreddit.search(search, sort=sort)
-
-        return [*submissions][: num_submissions]
-
-    def get_submissions_by_id(self, submission_ids: list[str]) -> list[Submission]:
-        return [self._reddit.submission(id) for id in submission_ids]
 
 
 def remove_all_non_asci(text):
@@ -45,6 +17,15 @@ def remove_all_non_asci(text):
 
 def lower_text_and_remove_all_non_asci(text):
     return remove_all_non_asci(text.lower().strip())
+
+
+def get_reddit_client(client_id: str, client_secret: str, 
+                      user_agent: str) -> Reddit:
+        return Reddit(
+            client_id=client_id,
+            client_secret=client_secret,
+            user_agent=user_agent
+        )
 
 
 def get_submission_list_from_subreddit(subreddit: Subreddit,
@@ -140,7 +121,7 @@ def get_todays_crypto_daily_discussion_title():
     )
 
 
-def get_todays_crypto_daily_discussion(reddit: Reddit) -> Submission:
+def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
     title = get_todays_crypto_daily_discussion_title()
     try:
         return get_submission_list_by_search(
@@ -153,18 +134,18 @@ def get_todays_crypto_daily_discussion(reddit: Reddit) -> Submission:
 if __name__ == "__main__":
     pass
 
-x = Reddit(
+reddit = get_reddit_client(
     client_id=os.environ["PRAW_CLIENT_ID"],
     client_secret=os.environ["PRAW_CLIENT_SECRET"],
     user_agent=os.environ["PRAW_USER_AGENT"]
 )
 
-submission = get_todays_crypto_daily_discussion(x)
+submission = get_todays_crypto_daily_discussion_submission(reddit)
 
 submission.title
 
 comments = get_comments_from_submission(submission)
 
 lower_text_and_remove_all_non_asci(
-    comments[0].body
+    comments[1].body
 ).split()
