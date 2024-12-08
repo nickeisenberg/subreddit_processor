@@ -133,23 +133,11 @@ def get_comments_from_submission_id(reddit: Reddit,
     return  get_comments_from_submission(submission, replace_more_limit)
 
 
-def save_crypto_daily_comments(root: str):
-    submission_list = get_submission_list_by_search(
-        crypto, 
-        "Daily Crypto Discussion",
-        no_of_submissions=100
+def get_todays_crypto_daily_chat_title():
+    return dt.datetime.strftime(
+        dt.datetime.now(),
+        "Daily Crypto Discussion - %B %-d, %Y (GMT+0)"
     )
-
-    for submission in submission_list:
-        try:
-            date = dt.datetime.strptime(
-                submission.title.split('Daily Crypto Discussion - ')[1][:-8],
-                "%B %d, %Y"
-            ).strftime("%Y_%m_%d")
-            save_to = os.path.join(root, "cryptocurrency", date)
-
-        except:
-            print("cant do")
 
 
 if __name__ == "__main__":
@@ -189,8 +177,11 @@ dt.datetime.strptime(
     "%B %d, %Y"
 ).strftime("%Y_%m_%d")
 
+lower_text_and_remove_all_non_asci(
+    comments[0].body
+).split()
 
-title = 'Daily Crypto Discussion - December 7, 2022 (GMT+0)'
+title = get_todays_crypto_daily_chat_title()
 x = get_submission_list_by_search(crypto, title, no_of_submissions=1)
 for _x in x:
     print(_x.title)
