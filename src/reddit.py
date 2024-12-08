@@ -2,8 +2,10 @@ import os
 import re
 import string
 import datetime as dt
+from typing import cast
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
+from pycoingecko import CoinGeckoAPI
 
 
 def remove_all_non_asci(text):
@@ -17,6 +19,33 @@ def remove_all_non_asci(text):
 
 def lower_text_and_remove_all_non_asci(text):
     return remove_all_non_asci(text.lower().strip())
+
+
+def get_ticker_and_name_map():
+    sym_to_name = {}
+    name_to_sym = {}
+    cg = CoinGeckoAPI()
+    cryptos = cg.get_coins_list()
+    for crypto in cryptos:
+        sym = crypto["symbol"].lower()
+        name = crypto["name"].lower()
+        sym_to_name[sym] = sym
+        name_to_sym[name] = sym
+    return sym_to_name, name_to_sym
+
+
+def extract_valid_tickers(sentence, symbol_to_name_map: dict, 
+                          name_to_symbol_map: dict) -> list[str]:
+    
+    x = []
+    for word in lower_text_and_remove_all_non_asci(sentence).split():
+        word = word.lower()
+        if word in symbol_to_name_map:
+            x.append(symbol_to_name_map[word])
+        elif word in name_to_symbol_map:
+            x.append(name_to_symbol_map[word])
+
+    return x
 
 
 def get_reddit_client(client_id: str, client_secret: str, 
@@ -142,10 +171,17 @@ reddit = get_reddit_client(
 
 submission = get_todays_crypto_daily_discussion_submission(reddit)
 
-submission.title
-
 comments = get_comments_from_submission(submission)
+
+stn, nts = get_ticker_and_name_map()
+
 
 lower_text_and_remove_all_non_asci(
     comments[1].body
-).split()
+)
+
+extract_valid_tickers(
+    lower_text_and_remove_all_non_asci(
+        comments[10].body
+    ), stn, nts
+)
