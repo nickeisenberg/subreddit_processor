@@ -2,7 +2,6 @@ import os
 import re
 import string
 import datetime as dt
-from typing import cast
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
 from pycoingecko import CoinGeckoAPI
@@ -149,21 +148,33 @@ def get_comments_from_submission_id(reddit: Reddit,
     return  get_comments_from_submission(submission, replace_more_limit)
 
 
-def get_todays_crypto_daily_discussion_title():
+def get_crypto_daily_discussion_title(year: int, month: int, day: int):
     return dt.datetime.strftime(
-        dt.datetime.now(),
+        dt.datetime(year, month, day),
         "Daily Crypto Discussion - %B %-d, %Y (GMT+0)"
     )
 
 
-def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
-    title = get_todays_crypto_daily_discussion_title()
+def get_crypto_daily_discussion_submission(reddit: Reddit, year: int, 
+                                           month: int, day: int) -> Submission:
+    title = get_crypto_daily_discussion_title(year, month, day)
     try:
         return get_submission_list_by_search(
             reddit.subreddit("cryptocurrency"), title, no_of_submissions=1
         )[0]
     except:
         raise Exception("Can't find the daily chat")
+
+
+def get_todays_crypto_daily_discussion_title():
+    date = dt.datetime.now()
+    return get_crypto_daily_discussion_title(date.year, date.month, date.day)
+
+
+def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
+    date = dt.datetime.now()
+    return get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
+
     
 
 if __name__ == "__main__":
