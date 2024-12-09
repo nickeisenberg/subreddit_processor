@@ -176,7 +176,6 @@ def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
     return get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
 
     
-
 if __name__ == "__main__":
     pass
 
@@ -186,21 +185,34 @@ reddit = get_reddit_client(
     user_agent=os.environ["PRAW_USER_AGENT"]
 )
 
-submission = get_todays_crypto_daily_discussion_submission(reddit)
-
-comments = get_comments_from_submission(submission)
-
-stn, nts = get_ticker_and_name_map(100)
-
 counts = {}
-for idx in range(len(comments)):
-    tickers = extract_valid_tickers(
-        lower_text_and_remove_all_non_asci(
-            comments[idx].body
-        ), stn, nts
-    )
-    for ticker in tickers:
-        if ticker in counts:
-            counts[ticker] += 1
-        else:
-            counts[ticker] = 1
+today = dt.datetime.now()
+for idx in range(10):
+    print(idx)
+    date = today - dt.timedelta(days=idx)
+    submission = get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
+    comments = get_comments_from_submission(submission)
+    stn, nts = get_ticker_and_name_map(100)
+    for idx in range(len(comments)):
+        tickers = extract_valid_tickers(
+            lower_text_and_remove_all_non_asci(
+                comments[idx].body
+            ), stn, nts
+        )
+        for ticker in tickers:
+            if ticker in counts:
+                counts[ticker] += 1
+            else:
+                counts[ticker] = 1
+counts
+
+
+
+
+
+
+
+
+
+
+
