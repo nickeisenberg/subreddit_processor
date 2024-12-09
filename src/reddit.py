@@ -175,9 +175,10 @@ def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
     date = dt.datetime.now()
     return get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
 
-    
+
 if __name__ == "__main__":
     pass
+
 
 reddit = get_reddit_client(
     client_id=os.environ["PRAW_CLIENT_ID"],
@@ -205,14 +206,3 @@ for idx in range(10):
             else:
                 counts[ticker] = 1
 counts
-
-
-
-
-
-
-
-
-
-
-

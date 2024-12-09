@@ -7,17 +7,16 @@ from transformers import (
 from transformers import pipeline
 
 
-# Load FinBERT model
-model_name = "ProsusAI/finbert"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+def get_fin_bert():
+    model_name = "ProsusAI/finbert"
+    return pipeline(
+        task="sentiment-analysis", 
+        model=AutoModelForSequenceClassification.from_pretrained(model_name), 
+        tokenizer=AutoTokenizer.from_pretrained(model_name)
+    )
 
-# Set up pipeline
-sentiment_pipeline = pipeline(
-    task="sentiment-analysis", model=model, tokenizer=tokenizer
-)
 
-# Analyze WSB comment
+model = get_fin_bert()
 x = "BTC is a shit coin"
-result = sentiment_pipeline(x)
+result = model(x)
 print(result)
