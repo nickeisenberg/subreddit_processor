@@ -21,11 +21,17 @@ def lower_text_and_remove_all_non_asci(text):
     return remove_all_non_asci(text.lower().strip())
 
 
-def get_ticker_and_name_map():
+def get_ticker_and_name_map(top: int):
     sym_to_name = {}
     name_to_sym = {}
+
     cg = CoinGeckoAPI()
-    cryptos = cg.get_coins_list()
+    
+    # Fetch the top 100 coins by market capitalization
+    cryptos = cg.get_coins_markets(
+        vs_currency='usd', order='market_cap_desc', per_page=top, page=1
+    )
+
     for crypto in cryptos:
         sym = crypto["symbol"].lower()
         name = crypto["name"].lower()
@@ -173,15 +179,17 @@ submission = get_todays_crypto_daily_discussion_submission(reddit)
 
 comments = get_comments_from_submission(submission)
 
-stn, nts = get_ticker_and_name_map()
+stn, nts = get_ticker_and_name_map(100)
 
-
-lower_text_and_remove_all_non_asci(
-    comments[1].body
-)
-
-extract_valid_tickers(
-    lower_text_and_remove_all_non_asci(
-        comments[10].body
-    ), stn, nts
-)
+counts = {}
+for idx in range(len(comments)):
+    tickers = extract_valid_tickers(
+        lower_text_and_remove_all_non_asci(
+            comments[idx].body
+        ), stn, nts
+    )
+    for ticker in tickers:
+        if ticker in counts:
+            counts[ticker] += 1
+        else:
+            counts[ticker] = 1
