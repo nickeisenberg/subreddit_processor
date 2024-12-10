@@ -215,8 +215,6 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
         if isinstance(praw_comment, MoreComments):
             continue
 
-        comment_info = {k: None for k in columns}    
-
         comment = lower_text_and_remove_all_non_asci(
             praw_comment.body
         )
@@ -224,17 +222,17 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
         comment_id = praw_comment.id
 
         sentiment = sentiment_model(comment)
-        sentiment = sentiment[0]["label"]
+        sentiment_label = sentiment[0]["label"]
         sentiment_score = sentiment[0]["score"]
 
         tickers = get_tickers_from_string(
             comment, sts, nts
         )
 
-        tickers = ", ".join(tickers)
+        tickers = ", ".join(tickers) if tickers else "N/A"
 
         comment_summarization = pd.DataFrame(
-            data=[[submission_id, comment_id, sentiment, sentiment_score, tickers]],
+            data=[[submission_id, comment_id, sentiment_label, sentiment_score, tickers]],
             columns=columns
         )
 
@@ -255,57 +253,4 @@ reddit = get_reddit_client(
 
 sentiment_model = get_fin_bert()
 
-avg = {
-    "negative": 0,
-    "neutral": 0,
-    "positive": 0,
-}
-counts = {}
-today = dt.datetime.now()
-for idx in range(1):
-    date = today - dt.timedelta(days=idx)
-    submission = get_crypto_daily_discussion_submission(
-        reddit, date.year, date.month, date.day
-    )
-    print(submission.title)
-    comments = get_comments_from_submission(submission)
-    sts, nts = get_ticker_and_name_map(100)
-    for comment_ in comments:
-        if isinstance(comment_, MoreComments):
-            continue
-        comment = lower_text_and_remove_all_non_asci(
-            comment_.body
-        )
-        tickers = get_tickers_from_string(
-            comment, sts, nts
-        )
-        if tickers:
-            sentiment = sentiment_model(comment)
-            for ticker in tickers:
-                if ticker in counts:
-                    counts[ticker]["count"] += 1
-                    counts[ticker]["comment"].append(comment)
-                    counts[ticker]["sentiment"].append(sentiment[0]["label"])
-                    counts[ticker]["sentiment_score"].append(sentiment[0]["score"])
-                else:
-                    counts[ticker] = {
-                        "count": 1,
-                        "comment": [comment],
-                        "sentiment": [sentiment[0]["label"]],
-                        "sentiment_score": [sentiment[0]["score"]]
-                    }
-    avg_ = {
-        "negative": [],
-        "neutral": [],
-        "positive": [],
-    }
-    for key in counts:
-        for sentiment, score in zip(counts[key]["sentiment"], counts[key]["sentiment_score"]):
-            avg_[sentiment].append(score)
-    avg["negative"] += sum(avg_["negative"])
-    avg["neutral"] += sum(avg_["neutral"])
-    avg["positive"] += sum(avg_["positive"])
-
-print(avg["negative"])
-print(avg["neutral"])
-print(avg["positive"])
+x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 10, 100, sentiment_model)
