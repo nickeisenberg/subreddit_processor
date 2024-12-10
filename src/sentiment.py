@@ -15,8 +15,11 @@ def get_fin_bert():
         tokenizer=AutoTokenizer.from_pretrained(model_name)
     )
 
+if __name__ == "__main__":
+    pass
 
 model = get_fin_bert()
 x = "BTC is a shit coin"
 result = model(x)
-print(result)
+print(result[0]["label"])
+print(result[0]["score"])

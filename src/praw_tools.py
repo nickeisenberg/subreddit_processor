@@ -5,9 +5,24 @@ import datetime as dt
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
 from pycoingecko import CoinGeckoAPI
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    pipeline
+)
+from transformers import pipeline
 
 
-def remove_all_non_asci(text):
+def get_fin_bert():
+    model_name = "ProsusAI/finbert"
+    return pipeline(
+        task="sentiment-analysis", 
+        model=AutoModelForSequenceClassification.from_pretrained(model_name), 
+        tokenizer=AutoTokenizer.from_pretrained(model_name)
+    )
+
+
+def remove_all_non_asci(text: str):
     text = re.sub(f"[{re.escape(string.punctuation)}]", '', text)
     text = re.sub("\n", " ", text)
     text = re.sub(r'[^\x00-\x7F]', '', text)
@@ -16,7 +31,7 @@ def remove_all_non_asci(text):
     return text
 
 
-def lower_text_and_remove_all_non_asci(text):
+def lower_text_and_remove_all_non_asci(text: str):
     return remove_all_non_asci(text.lower().strip())
 
 
@@ -39,7 +54,7 @@ def get_ticker_and_name_map(top: int):
     return sym_to_name, name_to_sym
 
 
-def extract_valid_tickers(sentence, symbol_to_name_map: dict, 
+def extract_valid_tickers(sentence: str, symbol_to_name_map: dict, 
                           name_to_symbol_map: dict) -> list[str]:
     
     x = []
@@ -186,23 +201,43 @@ reddit = get_reddit_client(
     user_agent=os.environ["PRAW_USER_AGENT"]
 )
 
+sentiment_model = get_fin_bert()
+
 counts = {}
 today = dt.datetime.now()
-for idx in range(10):
+for idx in range(1):
     print(idx)
     date = today - dt.timedelta(days=idx)
-    submission = get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
+    submission = get_crypto_daily_discussion_submission(
+        reddit, date.year, date.month, date.day
+    )
     comments = get_comments_from_submission(submission)
     stn, nts = get_ticker_and_name_map(100)
     for idx in range(len(comments)):
-        tickers = extract_valid_tickers(
-            lower_text_and_remove_all_non_asci(
-                comments[idx].body
-            ), stn, nts
+        comment = lower_text_and_remove_all_non_asci(
+            comments[idx].body
         )
-        for ticker in tickers:
-            if ticker in counts:
-                counts[ticker] += 1
-            else:
-                counts[ticker] = 1
-counts
+        tickers = extract_valid_tickers(
+            comment, stn, nts
+        )
+        if tickers:
+            sentiment = sentiment_model(comment)
+            for ticker in tickers:
+                if ticker in counts:
+                    counts[ticker]["count"] += 1
+                    counts[ticker]["comment"].append(comment)
+                    counts[ticker]["sentiment"].append(sentiment[0]["label"])
+                    counts[ticker]["sentiment_score"].append(sentiment[0]["score"])
+                else:
+                    counts[ticker] = {
+                        "count": 1,
+                        "comment": [comment],
+                        "sentiment": [sentiment[0]["label"]],
+                        "sentiment_score": [sentiment[0]["score"]]
+                    }
+
+counts.keys()
+
+coin = "eth"
+counts[coin]["sentiment"]
+counts[coin]["comment"][4]
