@@ -207,7 +207,7 @@ counts = {}
 today = dt.datetime.now()
 for idx in range(1):
     print(idx)
-    date = today - dt.timedelta(days=idx)
+    date = today - dt.timedelta(days=3)
     submission = get_crypto_daily_discussion_submission(
         reddit, date.year, date.month, date.day
     )
@@ -241,3 +241,16 @@ counts.keys()
 coin = "eth"
 counts[coin]["sentiment"]
 counts[coin]["comment"][4]
+
+avg = {
+    "negative": [],
+    "neutral": [],
+    "positive": [],
+}
+for key in counts:
+    for sentiment, score in zip(counts[key]["sentiment"], counts[key]["sentiment_score"]):
+        avg[sentiment].append(score)
+
+sum(avg["negative"])
+sum(avg["neutral"])
+sum(avg["positive"])
