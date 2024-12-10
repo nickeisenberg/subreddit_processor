@@ -2,6 +2,8 @@ import os
 import re
 import string
 import datetime as dt
+import pandas as pd
+from typing import Callable
 from praw import Reddit
 from praw.models import MoreComments
 from praw.reddit import Comment, Submission, Subreddit
@@ -37,27 +39,22 @@ def lower_text_and_remove_all_non_asci(text: str):
 
 
 def get_ticker_and_name_map(top: int):
-    sym_to_name = {}
+    sym_to_sym = {}
     name_to_sym = {}
-
     cg = CoinGeckoAPI()
-    
-    # Fetch the top 100 coins by market capitalization
     cryptos = cg.get_coins_markets(
         vs_currency='usd', order='market_cap_desc', per_page=top, page=1
     )
-
     for crypto in cryptos:
         sym = crypto["symbol"].lower()
         name = crypto["name"].lower()
-        sym_to_name[sym] = sym
+        sym_to_sym[sym] = sym
         name_to_sym[name] = sym
-    return sym_to_name, name_to_sym
+    return sym_to_sym, name_to_sym
 
 
-def extract_valid_tickers(sentence: str, symbol_to_name_map: dict, 
-                          name_to_symbol_map: dict) -> list[str]:
-    
+def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 
+                            name_to_symbol_map: dict) -> list[str]:
     x = []
     for word in lower_text_and_remove_all_non_asci(sentence).split():
         word = word.lower()
@@ -103,13 +100,10 @@ def get_submission_list_from_subreddit(subreddit: Subreddit,
         raise Exception("")
 
     submission_list: list[Submission] = []
-    count = 1
-    for sub in submissions:
+    for i, sub in enumerate(submissions):
         submission_list.append(sub)
-        if count == no_of_submissions:
+        if len(submission_list) == no_of_submissions:
             break
-        count += 1
-
     return submission_list
 
 
@@ -192,6 +186,63 @@ def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
     return get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
 
 
+def crypto_daily_discussion_sumarization(reddit: Reddit,
+                                         year: int,
+                                         month: int,
+                                         day: int, 
+                                         num_top_cyptos: int,
+                                         sentiment_model: Callable
+                                         ):
+    """
+    submission_id, comment_id, sentiment, sentiment_score, tickers_mentioned
+    """
+    
+    columns = pd.Series(
+            ["submission_id", "comment_id", "sentiment", "sentiment_score", "tickers_mentioned"]
+    )
+    summarization = pd.DataFrame(
+        columns=columns,
+        dtype=object
+    )
+
+    submission = get_crypto_daily_discussion_submission(
+        reddit, year, month, day
+    )
+    submission_id = submission.id
+
+    sts, nts = get_ticker_and_name_map(num_top_cyptos)
+    for praw_comment in get_comments_from_submission(submission):
+        if isinstance(praw_comment, MoreComments):
+            continue
+
+        comment_info = {k: None for k in columns}    
+
+        comment = lower_text_and_remove_all_non_asci(
+            praw_comment.body
+        )
+
+        comment_id = praw_comment.id
+
+        sentiment = sentiment_model(comment)
+        sentiment = sentiment[0]["label"]
+        sentiment_score = sentiment[0]["score"]
+
+        tickers = get_tickers_from_string(
+            comment, sts, nts
+        )
+
+        tickers = ", ".join(tickers)
+
+        comment_summarization = pd.DataFrame(
+            data=[[submission_id, comment_id, sentiment, sentiment_score, tickers]],
+            columns=columns
+        )
+
+        summarization = pd.concat((summarization, comment_summarization))
+
+    return summarization
+        
+
 if __name__ == "__main__":
     pass
 
@@ -211,20 +262,22 @@ avg = {
 }
 counts = {}
 today = dt.datetime.now()
-for idx in range(3):
+for idx in range(1):
     date = today - dt.timedelta(days=idx)
     submission = get_crypto_daily_discussion_submission(
         reddit, date.year, date.month, date.day
     )
     print(submission.title)
     comments = get_comments_from_submission(submission)
-    stn, nts = get_ticker_and_name_map(100)
-    for idx in range(len(comments)):
+    sts, nts = get_ticker_and_name_map(100)
+    for comment_ in comments:
+        if isinstance(comment_, MoreComments):
+            continue
         comment = lower_text_and_remove_all_non_asci(
-            comments[idx].body
+            comment_.body
         )
-        tickers = extract_valid_tickers(
-            comment, stn, nts
+        tickers = get_tickers_from_string(
+            comment, sts, nts
         )
         if tickers:
             sentiment = sentiment_model(comment)
