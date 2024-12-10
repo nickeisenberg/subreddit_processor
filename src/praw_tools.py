@@ -3,6 +3,7 @@ import re
 import string
 import datetime as dt
 from praw import Reddit
+from praw.models import MoreComments
 from praw.reddit import Comment, Submission, Subreddit
 from pycoingecko import CoinGeckoAPI
 from transformers import (
@@ -136,14 +137,14 @@ def get_comments_from_submission(submission: Submission,
     Retrieve comments from a submission
     """
     _ = submission.comments.replace_more(limit=replace_more_limit)
-    comment_list: list[Comment] = submission.comments.list()
+    comment_list = submission.comments.list()
     return comment_list
 
 
 def get_comments_from_submission_list(submission_list: list[Submission],
                                       num_comments_per_submission=10):
 
-    submission_coms: dict[Submission, list[Comment]] = {
+    submission_coms = {
         submission: [] for submission in submission_list
     }
 
@@ -157,7 +158,7 @@ def get_comments_from_submission_list(submission_list: list[Submission],
 
 
 def get_comments_from_submission_id(reddit: Reddit,
-                                    submission_id: list[str],
+                                    submission_id: str,
                                     replace_more_limit=0):
     submission: Submission = reddit.submission(submission_id)
     return  get_comments_from_submission(submission, replace_more_limit)
@@ -203,14 +204,19 @@ reddit = get_reddit_client(
 
 sentiment_model = get_fin_bert()
 
+avg = {
+    "negative": 0,
+    "neutral": 0,
+    "positive": 0,
+}
 counts = {}
 today = dt.datetime.now()
-for idx in range(1):
-    print(idx)
-    date = today - dt.timedelta(days=3)
+for idx in range(3):
+    date = today - dt.timedelta(days=idx)
     submission = get_crypto_daily_discussion_submission(
         reddit, date.year, date.month, date.day
     )
+    print(submission.title)
     comments = get_comments_from_submission(submission)
     stn, nts = get_ticker_and_name_map(100)
     for idx in range(len(comments)):
@@ -235,22 +241,18 @@ for idx in range(1):
                         "sentiment": [sentiment[0]["label"]],
                         "sentiment_score": [sentiment[0]["score"]]
                     }
+    avg_ = {
+        "negative": [],
+        "neutral": [],
+        "positive": [],
+    }
+    for key in counts:
+        for sentiment, score in zip(counts[key]["sentiment"], counts[key]["sentiment_score"]):
+            avg_[sentiment].append(score)
+    avg["negative"] += sum(avg_["negative"])
+    avg["neutral"] += sum(avg_["neutral"])
+    avg["positive"] += sum(avg_["positive"])
 
-counts.keys()
-
-coin = "eth"
-counts[coin]["sentiment"]
-counts[coin]["comment"][4]
-
-avg = {
-    "negative": [],
-    "neutral": [],
-    "positive": [],
-}
-for key in counts:
-    for sentiment, score in zip(counts[key]["sentiment"], counts[key]["sentiment_score"]):
-        avg[sentiment].append(score)
-
-sum(avg["negative"])
-sum(avg["neutral"])
-sum(avg["positive"])
+print(avg["negative"])
+print(avg["neutral"])
+print(avg["positive"])
