@@ -192,14 +192,9 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
                                          month: int,
                                          day: int, 
                                          num_top_cyptos: int,
-                                         sentiment_model: Callable
-                                         ):
-    """
-    submission_id, comment_id, sentiment, sentiment_score, tickers_mentioned
-    """
-    
+                                         sentiment_model: Callable):
     columns = pd.Series(
-            ["submission_id", "comment_id", "sentiment", "sentiment_score", "tickers_mentioned"]
+        ["submission_id", "comment_id", "sentiment", "sentiment_score", "tickers_mentioned"]
     )
     summarization = pd.DataFrame(
         columns=columns,
