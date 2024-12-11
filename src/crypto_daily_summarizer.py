@@ -216,9 +216,13 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
             praw_comment.body
         )
 
-        comment_id = praw_comment.id
+        if len(comment) > 512:
+            continue
 
+        comment_id = praw_comment.id
+        
         sentiment = sentiment_model(comment)
+
         sentiment_label = sentiment[0]["label"]
         sentiment_score = sentiment[0]["score"]
 
@@ -276,20 +280,18 @@ def get_ticker_sentiment(summarization: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    pass
-
-reddit = get_reddit_client(
-    client_id=os.environ["PRAW_CLIENT_ID"],
-    client_secret=os.environ["PRAW_CLIENT_SECRET"],
-    user_agent=os.environ["PRAW_USER_AGENT"]
-)
-
-sentiment_model = get_fin_bert("cuda")
-
-summarization = crypto_daily_discussion_summarization(
-    reddit, 2024, 12, 11, 100, sentiment_model
-)
-
-get_overal_sentiment_from_summarization(summarization)
-get_ticker_counts_from_summarization(summarization)
-get_ticker_sentiment(summarization)
+    reddit = get_reddit_client(
+        client_id=os.environ["PRAW_CLIENT_ID"],
+        client_secret=os.environ["PRAW_CLIENT_SECRET"],
+        user_agent=os.environ["PRAW_USER_AGENT"]
+    )
+    
+    sentiment_model = get_fin_bert("cuda")
+    
+    summarization = crypto_daily_discussion_summarization(
+        reddit, 2024, 12, 11, 100, sentiment_model
+    )
+    
+    get_overal_sentiment_from_summarization(summarization)
+    get_ticker_counts_from_summarization(summarization)
+    get_ticker_sentiment(summarization)
