@@ -16,12 +16,13 @@ from transformers import (
 from transformers import pipeline
 
 
-def get_fin_bert():
+def get_fin_bert(device="cpu"):
     model_name = "ProsusAI/finbert"
     return pipeline(
         task="sentiment-analysis", 
-        model=AutoModelForSequenceClassification.from_pretrained(model_name), 
-        tokenizer=AutoTokenizer.from_pretrained(model_name)
+        model=AutoModelForSequenceClassification.from_pretrained(model_name).to(device),
+        tokenizer=AutoTokenizer.from_pretrained(model_name),
+        device=device  # Specify the device for the pipeline
     )
 
 
@@ -253,8 +254,8 @@ reddit = get_reddit_client(
     user_agent=os.environ["PRAW_USER_AGENT"]
 )
 
-sentiment_model = get_fin_bert()
+sentiment_model = get_fin_bert("cuda")
 
-x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 10, 100, sentiment_model)
+x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 6, 100, sentiment_model)
 
-x.groupby("sentiment")["sentiment_score"].sum()
+print(x.groupby("sentiment")["sentiment_score"].sum())
