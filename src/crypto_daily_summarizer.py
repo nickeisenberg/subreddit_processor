@@ -188,7 +188,7 @@ def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
     return get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
 
 
-def crypto_daily_discussion_sumarization(reddit: Reddit,
+def crypto_daily_discussion_summarization(reddit: Reddit,
                                          year: int,
                                          month: int,
                                          day: int, 
@@ -241,18 +241,39 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
     return summarization
 
 
-def get_overal_sentiment_from_sumarization(sumarization: pd.DataFrame):
-    return sumarization.groupby("sentiment")["sentiment_score"].sum()
+def get_overal_sentiment_from_summarization(summarization: pd.DataFrame):
+    return summarization.groupby("sentiment")["sentiment_score"].sum()
 
 
-def get_ticker_counts_from_sumarization(sumarization: pd.DataFrame):
-    x = " ".join(sumarization["tickers_mentioned"].to_numpy()).replace(",", "").split()
+def get_ticker_counts_from_summarization(summarization: pd.DataFrame):
+    x = " ".join(summarization["tickers_mentioned"].to_numpy()).replace(",", "").replace("N/A", "").split()
     return pd.Series(x).value_counts().to_dict()
 
-def get_tickers_from_sumarization(sumarization: pd.DataFrame):
-    x = list(get_ticker_counts_from_sumarization(sumarization).keys())
-    x.remove("N/A")
-    return x
+
+def get_tickers_from_summarization(summarization: pd.DataFrame):
+    return  list(get_ticker_counts_from_summarization(summarization).keys())
+
+
+def coin(symbol: str):
+    def coin_(x):
+        sym = symbol
+        if sym in x.split():
+            return sym
+        else:
+            return "N/A"
+    return coin_
+
+
+def get_ticker_sentiment(summarization: pd.DataFrame):
+    sents = []
+    for ticker in get_tickers_from_summarization(summarization):
+        ticker_sentiment = summarization.loc[summarization["tickers_mentioned"].map(coin(ticker)) != "N/A"]
+        ticker_sentiment = ticker_sentiment.groupby("sentiment")["sentiment_score"].sum()
+        ticker_sentiment = pd.DataFrame(ticker_sentiment).T.rename_axis("", axis=1)
+        ticker_sentiment.index = pd.Series([ticker])
+        sents.append(ticker_sentiment)
+    return pd.concat(sents)
+
 
 if __name__ == "__main__":
     pass
@@ -265,18 +286,10 @@ reddit = get_reddit_client(
 
 sentiment_model = get_fin_bert("cuda")
 
-x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 11, 100, sentiment_model)
+summarization = crypto_daily_discussion_summarization(
+    reddit, 2024, 12, 11, 100, sentiment_model
+)
 
-get_overal_sentiment_from_sumarization(x)
-
-get_tickers_from_sumarization(x)
-
-get_ticker_counts_from_sumarization(x)
-
-def coin(x):
-    sym = "xlm"
-    if sym in x.split():
-        return sym
-    else:
-        return "N/A"
-x.loc[x["tickers_mentioned"].map(coin) != "N/A"].groupby("sentiment")["sentiment_score"].sum()
+get_overal_sentiment_from_summarization(summarization)
+get_ticker_counts_from_summarization(summarization)
+get_ticker_sentiment(summarization)
