@@ -230,11 +230,14 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
         )
 
         tickers = ", ".join(tickers) if tickers else "N/A"
+        
+        data = [submission_id, comment_id, sentiment_label, sentiment_score, tickers] 
 
         comment_summarization = pd.DataFrame(
-            data=[[submission_id, comment_id, sentiment_label, sentiment_score, tickers]],
+            data=[data],
             columns=columns
         )
+
 
         summarization = pd.concat((summarization, comment_summarization))
 
@@ -243,7 +246,6 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
 
 if __name__ == "__main__":
     pass
-
 
 reddit = get_reddit_client(
     client_id=os.environ["PRAW_CLIENT_ID"],
@@ -254,3 +256,5 @@ reddit = get_reddit_client(
 sentiment_model = get_fin_bert()
 
 x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 10, 100, sentiment_model)
+
+x.groupby("sentiment")["sentiment_score"].sum()
