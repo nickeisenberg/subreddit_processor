@@ -256,6 +256,14 @@ reddit = get_reddit_client(
 
 sentiment_model = get_fin_bert("cuda")
 
-x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 6, 100, sentiment_model)
+x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 10, 100, sentiment_model)
 
 print(x.groupby("sentiment")["sentiment_score"].sum())
+
+def coin(x):
+    sym = "eth"
+    if sym in x.split():
+        return sym
+    else:
+        return "N/A"
+x.loc[x["tickers_mentioned"].map(coin) != "N/A"].groupby("sentiment")["sentiment_score"].sum()
