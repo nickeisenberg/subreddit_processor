@@ -23,5 +23,5 @@ for i in tqdm(range(365 * 6)):
     )
     date_str = dt.datetime.strftime(date, "%Y_%m_%d")
     submission_id = summarization["submission_id"].values[0]
-    save_to = f"./data/{date_str}-{submission_id}"
+    save_to = f"./data/{date_str}-{submission_id}.csv"
     summarization.to_csv(save_to)
