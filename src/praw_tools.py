@@ -3,6 +3,7 @@ import re
 import string
 import datetime as dt
 import pandas as pd
+import numpy as np
 from typing import Callable
 from praw import Reddit
 from praw.models import MoreComments
@@ -238,7 +239,20 @@ def crypto_daily_discussion_sumarization(reddit: Reddit,
         summarization = pd.concat((summarization, comment_summarization))
 
     return summarization
-        
+
+
+def get_overal_sentiment_from_sumarization(sumarization: pd.DataFrame):
+    return sumarization.groupby("sentiment")["sentiment_score"].sum()
+
+
+def get_ticker_counts_from_sumarization(sumarization: pd.DataFrame):
+    x = " ".join(sumarization["tickers_mentioned"].to_numpy()).replace(",", "").split()
+    return pd.Series(x).value_counts().to_dict()
+
+def get_tickers_from_sumarization(sumarization: pd.DataFrame):
+    x = list(get_ticker_counts_from_sumarization(sumarization).keys())
+    x.remove("N/A")
+    return x
 
 if __name__ == "__main__":
     pass
@@ -251,12 +265,16 @@ reddit = get_reddit_client(
 
 sentiment_model = get_fin_bert("cuda")
 
-x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 10, 100, sentiment_model)
+x = crypto_daily_discussion_sumarization(reddit, 2024, 12, 11, 100, sentiment_model)
 
-print(x.groupby("sentiment")["sentiment_score"].sum())
+get_overal_sentiment_from_sumarization(x)
+
+get_tickers_from_sumarization(x)
+
+get_ticker_counts_from_sumarization(x)
 
 def coin(x):
-    sym = "eth"
+    sym = "xlm"
     if sym in x.split():
         return sym
     else:
