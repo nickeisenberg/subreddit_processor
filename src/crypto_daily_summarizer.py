@@ -189,11 +189,12 @@ def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
 
 
 def crypto_daily_discussion_summarization(reddit: Reddit,
-                                         year: int,
-                                         month: int,
-                                         day: int, 
-                                         num_top_cyptos: int,
-                                         sentiment_model: Callable):
+                                          year: int,
+                                          month: int,
+                                          day: int, 
+                                          num_top_cyptos: int,
+                                          sentiment_model: Callable,
+                                          return_comments: bool = False):
     columns = pd.Series(
         ["submission_id", "comment_id", "sentiment", "sentiment_score", "tickers_mentioned"]
     )
@@ -206,6 +207,8 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
         reddit, year, month, day
     )
     submission_id = submission.id
+
+    comments = []
 
     sts, nts = get_ticker_and_name_map(num_top_cyptos)
     for praw_comment in get_comments_from_submission(submission):
@@ -220,6 +223,9 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
             continue
 
         comment_id = praw_comment.id
+
+        if return_comments:
+            comments.append([comment_id, comment])
         
         sentiment = sentiment_model(comment)
 
@@ -241,8 +247,11 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
 
 
         summarization = pd.concat((summarization, comment_summarization))
-
-    return summarization
+    
+    if not return_comments:
+        return summarization
+    else:
+        return summarization, comments
 
 
 def get_overal_sentiment_from_summarization(summarization: pd.DataFrame):
