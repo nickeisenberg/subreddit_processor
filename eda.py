@@ -10,8 +10,6 @@ from src.crypto_daily_summarizer import (
     get_ticker_counts_from_summarization
 )
 
-from sklearn.preprocessing import MinMaxScaler
-
 
 
 def get_sentiment_for_ticker(ticker, 
@@ -41,10 +39,13 @@ def get_sentiment_for_ticker(ticker,
 
     return sentiments
 
-btc_pos = get_sentiment_for_ticker("btc")
+btc_pos = get_sentiment_for_ticker("btc", "positive")
+btc_neg = get_sentiment_for_ticker("btc", "negative")
 
-
-plt.plot(
-    MinMaxScaler().fit_transform(btc_pos.reshape((-1, 1))).reshape(-1)
+dates = sorted(
+    [x.split("-")[0] for x in os.listdir("./data") if x.endswith(".csv")]
 )
+
+sent = btc_pos - btc_neg
+plt.plot(np.cumsum(sent))
 plt.show()
