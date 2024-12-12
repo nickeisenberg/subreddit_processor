@@ -14,13 +14,17 @@ reddit = get_reddit_client(
 )
 sentiment_model = get_fin_bert("cuda")
 
-today = dt.datetime.today()
+start = dt.datetime(2024, 9, 14)
 
 for i in tqdm(range(365 * 6)):
-    date = today - dt.timedelta(days=i)
-    summarization, comments = crypto_daily_discussion_summarization(
-        reddit, date.year, date.month, date.day, 100, sentiment_model, True
-    )
+    date = start - dt.timedelta(days=i)
+    try:
+        summarization, comments = crypto_daily_discussion_summarization(
+            reddit, date.year, date.month, date.day, 100, sentiment_model, True
+        )
+    except:
+        print("date not found")
+        continue
     date_str = dt.datetime.strftime(date, "%Y_%m_%d")
     submission_id = summarization["submission_id"].values[0]
     save_csv_to = f"./data/{date_str}-{submission_id}.csv"
