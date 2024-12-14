@@ -42,23 +42,23 @@ def get_date_to_id_map(path="data/date_id_key.json"):
 
 def combine_dfs(start_date: str, end_date: str):
     """
-    still need to finish this.
+    need to add a date column to this
     """
     with open("data/date_id_key.json", "r") as f:
         date_id_map = json.load(f)
-
-    start_id = date_id_map[start_date] 
-
-    df_names = [f"{start_date}-{start_id}.csv"]
+    dfs = []
     current = dt.datetime.strptime(start_date, "%Y_%m_%d")
     before = True
     while before:
+        current_date = current.strftime("%Y_%m_%d")
+        current_path = f"./data/individual/{current_date}-{date_id_map[current_date]}.csv"
+        if os.path.isfile(current_path):
+            dfs.append(
+                pd.read_csv(
+                    current_path, index_col=0, na_values=[], keep_default_na=False
+                )
+            )
         current = current + dt.timedelta(days=1)
-        current_str = dt.datetime.strftime(current, "%Y_%m_%d")
-        df_names.append(
-            f"{current_str}-{date_id_map[current_str]}"
-        )
-        if current == dt.datetime.strptime(end_date, "%Y_%m_%d"):
+        if current > dt.datetime.strptime(end_date, "%Y_%m_%d"):
             before = False
-
-    return df_names
+    return pd.concat(dfs)
