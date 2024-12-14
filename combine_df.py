@@ -15,7 +15,10 @@ def make_date_id_map():
 
 def make_all_csv(save_to="./data/all.csv"):
     paths = sorted(
-        [os.path.join("data", "individual", x) for x in os.listdir("./data/individual") if x.endswith(".csv")]
+        [
+            os.path.join("data", "individual", x) 
+            for x in os.listdir("./data/individual") if x.endswith(".csv")
+        ]
     )
     dates = [x.split("-")[0].split("/")[-1] for x in paths]
     ids = [x.split("-")[1].split(".")[0] for x in paths]
@@ -36,16 +39,19 @@ def make_all_csv(save_to="./data/all.csv"):
 
 
 def get_date_to_id_map(path="data/date_id_key.json"):
-    with open(path, "w") as f:
+    with open(path, "r") as f:
         return json.load(f)
 
 
 def combine_dfs(start_date: str, end_date: str):
-    """
-    need to add a date column to this
-    """
     with open("data/date_id_key.json", "r") as f:
         date_id_map = json.load(f)
+            
+    date_id_df = pd.DataFrame(
+        [[k, v] for k, v in date_id_map.items()], 
+        columns=pd.Series(["date", "submission_id"])
+    )
+
     dfs = []
     current = dt.datetime.strptime(start_date, "%Y_%m_%d")
     before = True
@@ -53,12 +59,17 @@ def combine_dfs(start_date: str, end_date: str):
         current_date = current.strftime("%Y_%m_%d")
         current_path = f"./data/individual/{current_date}-{date_id_map[current_date]}.csv"
         if os.path.isfile(current_path):
+            df = pd.read_csv(
+                current_path, index_col=0, na_values=[], keep_default_na=False
+            )
             dfs.append(
-                pd.read_csv(
-                    current_path, index_col=0, na_values=[], keep_default_na=False
-                )
+                pd.merge(df, date_id_df, left_on="submission_id", right_on="submission_id")
             )
         current = current + dt.timedelta(days=1)
         if current > dt.datetime.strptime(end_date, "%Y_%m_%d"):
             before = False
-    return pd.concat(dfs)
+
+    return pd.concat(dfs).reset_index(drop=True)
+
+
+combine_dfs("2024_01_01", "2024_01_09")
