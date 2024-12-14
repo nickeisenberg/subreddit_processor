@@ -39,6 +39,7 @@ def get_sentiment_for_ticker(ticker,
 
     return sentiments
 
+
 btc_pos = get_sentiment_for_ticker("btc", "positive")
 btc_neg = get_sentiment_for_ticker("btc", "negative")
 
