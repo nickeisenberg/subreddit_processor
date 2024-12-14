@@ -38,6 +38,13 @@ def make_all_csv(save_to="./data/all.csv"):
     return df_with_dates
 
 
+def get_all_csv(path="./data/all.csv"):
+    if not os.path.isfile(path):
+        raise Exception("all_csv not found")
+    else:
+        return pd.read_csv(path, index_col=0, na_values=[], keep_default_na=False)
+
+
 def get_date_to_id_map(path="data/date_id_key.json"):
     with open(path, "r") as f:
         return json.load(f)
