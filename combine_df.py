@@ -103,12 +103,16 @@ def get_ticker_counts_by_date(df: pd.DataFrame, ticker: str):
     return tick_df.groupby("date")["tickers_mentioned"].count()
 
 
-def get_sentiment(df: pd.DataFrame, ticker: str | None = None):
+def get_pos_neutral_neg_by_date(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
         df = replace_tickers_mentioned_with_one_ticker(df, ticker)
-    y = df.groupby(["date", "sentiment"])["sentiment_score"].mean()
-    pos: pd.DataFrame = y.loc[y.index.get_level_values(1) == 'positive'].reset_index().drop("sentiment", axis=1)
-    neg: pd.DataFrame = y.loc[y.index.get_level_values(1) == 'negative'].reset_index().drop("sentiment", axis=1)
+    return df.groupby(["date", "sentiment"])["sentiment_score"].mean()
+
+
+def get_pos_neg_by_date(df: pd.DataFrame, ticker: str | None = None):
+    y = get_pos_neutral_neg_by_date(df, ticker)
+    pos = y.loc[y.index.get_level_values(1) == 'positive'].reset_index().drop("sentiment", axis=1)
+    neg = y.loc[y.index.get_level_values(1) == 'negative'].reset_index().drop("sentiment", axis=1)
     comb = pd.merge(
         pos, neg, how="outer", left_on="date", right_on="date",
         suffixes=("_pos", "_neg")
@@ -116,17 +120,20 @@ def get_sentiment(df: pd.DataFrame, ticker: str | None = None):
     return comb
 
 
-def get_sentiment_change_by_date(df: pd.DataFrame, ticker: str | None = None):
-    comb = get_sentiment(df, ticker)
-    return (comb["sentiment_score_pos"] - comb["sentiment_score_neg"]).values
+def get_sentiment_sum_by_date(df: pd.DataFrame, ticker: str | None = None):
+    comb = get_pos_neg_by_date(df, ticker)
+    x = [comb["date"], (comb["sentiment_score_pos"] - comb["sentiment_score_neg"])]
+    return pd.DataFrame(data=x, index=pd.Series(["date", "sentiment_score"])).T
 
 
 df = get_all_csv()
 
 eth_counts = get_ticker_counts_by_date(df, "eth")
 
-all_sent = get_sentiment_change_by_date(df)
-btc_sent = get_sentiment_change_by_date(df, "btc")
+all_sent = get_sentiment_sum_by_date(df)
+
+btc_sent = get_sentiment_sum_by_date(df, "btc")
+btc_sent
 
 
 plt.plot(eth_counts.to_numpy())
