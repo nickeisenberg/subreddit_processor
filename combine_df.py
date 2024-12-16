@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import datetime as dt
+import yfinance as yf
+from sklearn.preprocessing import MinMaxScaler
 
 
 def make_date_id_map():
@@ -126,20 +128,36 @@ def get_sentiment_sum_by_date(df: pd.DataFrame, ticker: str | None = None):
     return pd.DataFrame(data=x, index=pd.Series(["date", "sentiment_score"])).T
 
 
+def get_ticker_close(ticker: str, start_date: str, end_date: str):
+    """
+    date format is '2020-01-01'
+    """
+    y = yf.download(
+        f'{ticker}-USD', start=start_date, end=end_date, interval='1d'
+    )
+    if y is not None:
+        x = y["Close"].reset_index()
+        x.columns = ["date", "btc"]
+        x["date"] = x["date"].astype(str).map(lambda x: x.replace("-", "_"))
+        return x
+    else:
+        raise Exception("Ticker not found")
+
+
 df = get_all_csv()
 
-eth_counts = get_ticker_counts_by_date(df, "eth")
-
-all_sent = get_sentiment_sum_by_date(df)
-
 btc_sent = get_sentiment_sum_by_date(df, "btc")
-btc_sent
+btc_close = get_ticker_close("BTC", "2019-03-09", "2024-12-11")
 
+btc = pd.merge(btc_sent, btc_close, on="date")
 
-plt.plot(eth_counts.to_numpy())
-plt.show()
+plt.plot(
+    MinMaxScaler((-1, 1)).fit_transform(np.cumsum(btc["btc"].values).reshape(-1, 1)).reshape(-1)
+)
 
-plt.plot(np.cumsum(all_sent))
+plt.plot(
+    MinMaxScaler().fit_transform(btc["sentiment_score"].values.reshape(-1, 1)).reshape(-1)
+)
 plt.show()
 
 plt.plot(np.cumsum(btc_sent))
