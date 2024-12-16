@@ -152,11 +152,10 @@ btc_close = get_ticker_close("BTC", "2019-03-09", "2024-12-11")
 btc = pd.merge(btc_sent, btc_close, on="date")
 
 plt.plot(
-    MinMaxScaler((-1, 1)).fit_transform(np.cumsum(btc["btc"].values).reshape(-1, 1)).reshape(-1)
+    MinMaxScaler().fit_transform(btc["btc"].values.reshape(-1, 1)).reshape(-1)
 )
-
 plt.plot(
-    MinMaxScaler().fit_transform(btc["sentiment_score"].values.reshape(-1, 1)).reshape(-1)
+    MinMaxScaler(((-1, 1))).fit_transform(np.cumsum(btc["sentiment_score"].values).reshape(-1, 1)).reshape(-1)
 )
 plt.show()
 
