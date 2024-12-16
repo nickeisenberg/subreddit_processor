@@ -1,3 +1,4 @@
+from copy import deepcopy
 import os
 import numpy as np
 import pandas as pd
@@ -91,9 +92,20 @@ def coin(symbol: str):
     return coin_
 
 
+def replace_tickers_mentioned_with_one_ticker(df: pd.DataFrame, ticker: str):
+    _df = deepcopy(df)
+    _df["tickers_mentioned"] = df["tickers_mentioned"].map(coin(ticker))
+    return _df.loc[_df["tickers_mentioned"] != "N/A"]
+
+
+def get_ticker_counts_by_date(df: pd.DataFrame, ticker: str):
+    tick_df: pd.DataFrame = replace_tickers_mentioned_with_one_ticker(df, ticker)
+    return tick_df.groupby("date")["tickers_mentioned"].count()
+
+
 def get_sentiment(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
-        df = df.loc[df["tickers_mentioned"].map(coin(ticker)) != "N/A"]
+        df = replace_tickers_mentioned_with_one_ticker(df, ticker)
     y = df.groupby(["date", "sentiment"])["sentiment_score"].mean()
     pos: pd.DataFrame = y.loc[y.index.get_level_values(1) == 'positive'].reset_index().drop("sentiment", axis=1)
     neg: pd.DataFrame = y.loc[y.index.get_level_values(1) == 'negative'].reset_index().drop("sentiment", axis=1)
@@ -110,15 +122,18 @@ def get_sentiment_change_by_date(df: pd.DataFrame, ticker: str | None = None):
 
 
 df = get_all_csv()
+
+eth_counts = get_ticker_counts_by_date(df, "eth")
+
+all_sent = get_sentiment_change_by_date(df)
 btc_sent = get_sentiment_change_by_date(df, "btc")
-eth_sent = get_sentiment_change_by_date(df, "eth")
-ada_sent = get_sentiment_change_by_date(df, "ada")
+
+
+plt.plot(eth_counts.to_numpy())
+plt.show()
+
+plt.plot(np.cumsum(all_sent))
+plt.show()
 
 plt.plot(np.cumsum(btc_sent))
-plt.show()
-
-plt.plot(np.cumsum(eth_sent))
-plt.show()
-
-plt.plot(np.cumsum(ada_sent))
 plt.show()
