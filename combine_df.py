@@ -1,5 +1,7 @@
 import os
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import json
 import datetime as dt
 
@@ -50,7 +52,7 @@ def get_date_to_id_map(path="data/date_id_key.json"):
         return json.load(f)
 
 
-def combine_dfs(start_date: str, end_date: str):
+def combine_dfs_by_date_range(start_date: str, end_date: str):
     with open("data/date_id_key.json", "r") as f:
         date_id_map = json.load(f)
             
@@ -79,4 +81,44 @@ def combine_dfs(start_date: str, end_date: str):
     return pd.concat(dfs).reset_index(drop=True)
 
 
-combine_dfs("2024_01_01", "2024_01_09")
+def coin(symbol: str):
+    def coin_(x):
+        sym = symbol
+        if sym in x.split():
+            return sym
+        else:
+            return "N/A"
+    return coin_
+
+
+def get_sentiment(df: pd.DataFrame, ticker: str | None = None):
+    if ticker:
+        df = df.loc[df["tickers_mentioned"].map(coin(ticker)) != "N/A"]
+    y = df.groupby(["date", "sentiment"])["sentiment_score"].mean()
+    pos: pd.DataFrame = y.loc[y.index.get_level_values(1) == 'positive'].reset_index().drop("sentiment", axis=1)
+    neg: pd.DataFrame = y.loc[y.index.get_level_values(1) == 'negative'].reset_index().drop("sentiment", axis=1)
+    comb = pd.merge(
+        pos, neg, how="outer", left_on="date", right_on="date",
+        suffixes=("_pos", "_neg")
+    ).replace(np.nan, 0)
+    return comb
+
+
+def get_sentiment_change_by_date(df: pd.DataFrame, ticker: str | None = None):
+    comb = get_sentiment(df, ticker)
+    return (comb["sentiment_score_pos"] - comb["sentiment_score_neg"]).values
+
+
+df = get_all_csv()
+btc_sent = get_sentiment_change_by_date(df, "btc")
+eth_sent = get_sentiment_change_by_date(df, "eth")
+ada_sent = get_sentiment_change_by_date(df, "ada")
+
+plt.plot(np.cumsum(btc_sent))
+plt.show()
+
+plt.plot(np.cumsum(eth_sent))
+plt.show()
+
+plt.plot(np.cumsum(ada_sent))
+plt.show()
