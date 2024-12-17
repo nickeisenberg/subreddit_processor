@@ -1,8 +1,6 @@
-from src.crypto_daily_summarizer import (
-    crypto_daily_discussion_summarization,
-    get_reddit_client,
-    get_fin_bert
-)
+from .crypto import crypto_daily_discussion_summarization
+from ..praw_tools import get_reddit_client
+from ..sentiment_models import get_fin_bert
 from tqdm import tqdm
 import os
 import datetime as dt
@@ -39,3 +37,4 @@ def init_past():
             for comment in comments:
                 comment_id, comment = comment
                 _ = f.write(f"{comment_id}: {comment}\n")
+

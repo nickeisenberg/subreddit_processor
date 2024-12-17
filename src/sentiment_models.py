@@ -12,5 +12,5 @@ def get_fin_bert(device="cpu"):
         task="sentiment-analysis", 
         model=AutoModelForSequenceClassification.from_pretrained(model_name).to(device),
         tokenizer=AutoTokenizer.from_pretrained(model_name),
-        device=device  # Specify the device for the pipeline
+        device=device
     )

@@ -18,6 +18,11 @@ def make_date_id_map():
     return {d: id for d, id in zip(dates, ids)}
 
 
+def get_date_to_id_map(path="data/date_id_key.json"):
+    with open(path, "r") as f:
+        return json.load(f)
+
+
 def make_all_csv(save_to="./data/all.csv"):
     paths = sorted(
         [
@@ -48,11 +53,6 @@ def get_all_csv(path="./data/all.csv"):
         raise Exception("all_csv not found")
     else:
         return pd.read_csv(path, index_col=0, na_values=[], keep_default_na=False)
-
-
-def get_date_to_id_map(path="data/date_id_key.json"):
-    with open(path, "r") as f:
-        return json.load(f)
 
 
 def combine_dfs_by_date_range(start_date: str, end_date: str):
@@ -183,7 +183,8 @@ def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
         return fig
 
 
-df = get_all_csv()
-ticker = "xlm"
-plot_sentiment_and_close(df, ticker)
-get_ticker_counts_from_summarization(df)
+if __name__ == "__main__":
+    df = get_all_csv()
+    ticker = "xlm"
+    plot_sentiment_and_close(df, ticker)
+    get_ticker_counts_from_summarization(df)
