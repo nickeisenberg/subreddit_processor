@@ -184,7 +184,6 @@ def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
 
 
 df = get_all_csv()
-ticker = "sol"
+ticker = "xlm"
 plot_sentiment_and_close(df, ticker)
-
 get_ticker_counts_from_summarization(df)
