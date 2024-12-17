@@ -1,12 +1,27 @@
-from ..praw_tools import (
-    get_submission_list_by_search,
-    get_comments_from_submission
-)
-from ..text_processing import (
-    lower_text_and_remove_all_non_asci,
-    get_tickers_from_string,
-    get_ticker_and_name_map
-)
+try:
+    from ..praw_tools import (
+        get_submission_list_by_search,
+        get_comments_from_submission
+    )
+except:
+    from src.praw_tools import (
+        get_submission_list_by_search,
+        get_comments_from_submission
+    )
+
+try:
+    from ..text_processing import (
+        lower_text_and_remove_all_non_asci,
+        get_tickers_from_string,
+        get_ticker_and_name_map
+    )
+except:
+    from src.text_processing import (
+        lower_text_and_remove_all_non_asci,
+        get_tickers_from_string,
+        get_ticker_and_name_map
+    )
+
 
 import datetime as dt
 import pandas as pd
@@ -108,4 +123,3 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
         return summarization
     else:
         return summarization, comments
-
