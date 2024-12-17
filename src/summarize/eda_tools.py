@@ -13,8 +13,8 @@ def make_date_id_map():
     paths = sorted(
         [os.path.join("data", "individual", x) for x in os.listdir("./data/individual") if x.endswith(".csv")]
     )
-    dates = [x.split("-")[0].split("/")[-1] for x in paths]
-    ids = [x.split("-")[1].split(".")[0] for x in paths]
+    dates = [x.split("_")[0].split("/")[-1] for x in paths]
+    ids = [x.split("_")[1].split(".")[0] for x in paths]
     return {d: id for d, id in zip(dates, ids)}
 
 
@@ -30,8 +30,8 @@ def make_all_csv(save_to="./data/all.csv"):
             for x in os.listdir("./data/individual") if x.endswith(".csv")
         ]
     )
-    dates = [x.split("-")[0].split("/")[-1] for x in paths]
-    ids = [x.split("-")[1].split(".")[0] for x in paths]
+    dates = [x.split("_")[0].split("/")[-1] for x in paths]
+    ids = [x.split("_")[1].split(".")[0] for x in paths]
     id_date = [[x, y] for x, y in zip(ids, dates)]
     id_date_df = pd.DataFrame(id_date, columns=pd.Series(["submission_id", "date"]))
     dfs = [
@@ -143,7 +143,8 @@ def get_ticker_close(ticker: str, start_date: str, end_date: str):
     if y is not None:
         x = y["Close"].reset_index()
         x.columns = ["date", ticker.lower()]
-        x["date"] = x["date"].astype(str).map(lambda x: x.replace("-", "_"))
+        # x["date"] = x["date"].astype(str).map(lambda x: x.replace("-", "_"))
+        x["date"] = x["date"].astype(str)
         return x
     else:
         raise Exception("Ticker not found")
@@ -151,15 +152,18 @@ def get_ticker_close(ticker: str, start_date: str, end_date: str):
 
 def get_close_and_sentiment_df(df: pd.DataFrame, ticker: str):
     sent = get_sentiment_sum_by_date(df, ticker)
-    start_date = str(sent["date"].min()).replace("_", "-")
-    end_date = str(sent["date"].max()).replace("_", "-")
+    # start_date = str(sent["date"].min()).replace("_", "-")
+    # end_date = str(sent["date"].max()).replace("_", "-")
+    start_date = str(sent["date"].min())
+    end_date = str(sent["date"].max())
     close = get_ticker_close(ticker, start_date=start_date, end_date=end_date)
     return pd.merge(sent, close, on="date")
 
 
 def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
     combined_sent_and_close = get_close_and_sentiment_df(df, ticker)
-    dates = pd.to_datetime(combined_sent_and_close["date"].map(lambda x: x.replace("_", "-"))).to_numpy()
+    # dates = pd.to_datetime(combined_sent_and_close["date"].map(lambda x: x.replace("_", "-"))).to_numpy()
+    dates = pd.to_datetime(combined_sent_and_close["date"]).to_numpy()
     
     fig = plt.figure()
     plt.plot(

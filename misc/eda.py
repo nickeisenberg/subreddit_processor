@@ -3,7 +3,6 @@ from src.summarize.eda_tools import (
     plot_sentiment_and_close,
 )
 
-
 df = get_all_csv()
 ticker = "ada"
 plot_sentiment_and_close(df, ticker)
