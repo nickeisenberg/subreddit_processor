@@ -137,27 +137,43 @@ def get_ticker_close(ticker: str, start_date: str, end_date: str):
     )
     if y is not None:
         x = y["Close"].reset_index()
-        x.columns = ["date", "btc"]
+        x.columns = ["date", ticker.lower()]
         x["date"] = x["date"].astype(str).map(lambda x: x.replace("-", "_"))
         return x
     else:
         raise Exception("Ticker not found")
 
 
+def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
+    sent = get_sentiment_sum_by_date(df, ticker)
+    start_date = str(sent["date"].min()).replace("_", "-")
+    end_date = str(sent["date"].max()).replace("_", "-")
+    close = get_ticker_close(ticker, start_date=start_date, end_date=end_date)
+    combined_sent_and_close = pd.merge(sent, close, on="date")
+    dates = pd.to_datetime(combined_sent_and_close["date"].map(lambda x: x.replace("_", "-"))).to_numpy()
+    
+    fig = plt.figure()
+    plt.plot(
+        dates,
+        MinMaxScaler().fit_transform(
+            combined_sent_and_close[ticker].to_numpy().reshape(-1, 1)
+        ).reshape(-1),
+        label="close"
+    )
+    plt.plot(
+        dates,
+        MinMaxScaler().fit_transform(
+            np.cumsum(combined_sent_and_close["sentiment_score"].to_numpy()).reshape(-1, 1)
+        ).reshape(-1),
+        label="sentiment"
+    )
+    plt.legend()
+    if plot:
+        plt.show()
+    else:
+        return fig
+
+
 df = get_all_csv()
-
-btc_sent = get_sentiment_sum_by_date(df, "btc")
-btc_close = get_ticker_close("BTC", "2019-03-09", "2024-12-11")
-
-btc = pd.merge(btc_sent, btc_close, on="date")
-
-plt.plot(
-    MinMaxScaler().fit_transform(btc["btc"].values.reshape(-1, 1)).reshape(-1)
-)
-plt.plot(
-    MinMaxScaler(((-1, 1))).fit_transform(np.cumsum(btc["sentiment_score"].values).reshape(-1, 1)).reshape(-1)
-)
-plt.show()
-
-plt.plot(np.cumsum(btc_sent))
-plt.show()
+ticker = "ada"
+plot_sentiment_and_close(df, ticker)
