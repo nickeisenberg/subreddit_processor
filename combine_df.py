@@ -100,6 +100,11 @@ def replace_tickers_mentioned_with_one_ticker(df: pd.DataFrame, ticker: str):
     return _df.loc[_df["tickers_mentioned"] != "N/A"]
 
 
+def get_ticker_counts_from_summarization(summarization: pd.DataFrame):
+    x = " ".join(summarization["tickers_mentioned"].to_numpy()).replace(",", "").replace("N/A", "").split()
+    return pd.Series(x).value_counts().to_dict()
+
+
 def get_ticker_counts_by_date(df: pd.DataFrame, ticker: str):
     tick_df: pd.DataFrame = replace_tickers_mentioned_with_one_ticker(df, ticker)
     return tick_df.groupby("date")["tickers_mentioned"].count()
@@ -175,5 +180,7 @@ def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
 
 
 df = get_all_csv()
-ticker = "ada"
+ticker = "sol"
 plot_sentiment_and_close(df, ticker)
+
+get_ticker_counts_from_summarization(df)
