@@ -152,31 +152,3 @@ def add_crypto_daily_discussion_summary_to_database(
         for comment in comments:
             comment_id, comment = comment
             _ = f.write(f"{comment_id}: {comment}\n")
-
-
-def create_database(root, reddit: Reddit, start_date, end_date, sentiment_model):
-    start_date = dt.datetime(2024, 9, 14)
-    
-    for i in tqdm(range(365 * 6)):
-        date = start_date - dt.timedelta(days=i)
-        date_str = dt.datetime.strftime(date, "%Y-%m-%d")
-
-        try:
-            summarization, comments = crypto_daily_discussion_summarization(
-                reddit, date.year, date.month, date.day, 100, sentiment_model, True
-            )
-            submission_id = summarization["submission_id"].values[0]
-        except:
-            print("date not found")
-            continue
-
-
-        save_csv_to = f"./data/{date_str}_{submission_id}.csv"
-        save_comments_to = f"./data/{date_str}_{submission_id}.txt"
-
-        summarization.to_csv(save_csv_to)
-
-        with open(save_comments_to, "a") as f:
-            for comment in comments:
-                comment_id, comment = comment
-                _ = f.write(f"{comment_id}: {comment}\n")
