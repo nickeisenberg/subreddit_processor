@@ -40,5 +40,5 @@ def init_past():
                 _ = f.write(f"{comment_id}: {comment}\n")
 
 
-if __name__ == "__main__":
-    # init_past()
+# if __name__ == "__main__":
+#     init_past()

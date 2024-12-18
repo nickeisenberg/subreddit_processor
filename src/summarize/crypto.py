@@ -1,12 +1,23 @@
+import os
+import datetime as dt
+from tqdm import tqdm
+import pandas as pd
+from typing import Callable
+from praw import Reddit
+from praw.models import MoreComments
+from praw.reddit import Submission
+
 try:
     from ..praw_tools import (
         get_submission_list_by_search,
-        get_comments_from_submission
+        get_comments_from_submission,
+        get_reddit_client
     )
 except:
     from src.praw_tools import (
         get_submission_list_by_search,
-        get_comments_from_submission
+        get_comments_from_submission,
+        get_reddit_client
     )
 
 try:
@@ -21,14 +32,6 @@ except:
         get_tickers_from_string,
         get_ticker_and_name_map
     )
-
-
-import datetime as dt
-import pandas as pd
-from typing import Callable
-from praw import Reddit
-from praw.models import MoreComments
-from praw.reddit import Submission
 
 
 def get_crypto_daily_discussion_title(year: int, month: int, day: int):
@@ -123,3 +126,57 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
         return summarization
     else:
         return summarization, comments
+
+
+def add_crypto_daily_discussion_summary_to_database(
+        root: str, reddit: Reddit, date: str | dt.datetime, sentiment_model: Callable):
+    
+    if isinstance(date, str):
+        date = dt.datetime.strptime(date, "%Y-%m-%d")
+    date_str = dt.datetime.strftime(date, "%Y-%m-%d")
+
+    try:
+        summarization, comments = crypto_daily_discussion_summarization(
+            reddit, date.year, date.month, date.day, 100, sentiment_model, True
+        )
+        submission_id = summarization["submission_id"].values[0]
+    except:
+        raise Exception("date not found")
+
+    save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
+    save_comments_to = os.path.join(root, f"{date_str}_{submission_id}.txt")
+
+    summarization.to_csv(save_csv_to)
+
+    with open(save_comments_to, "a") as f:
+        for comment in comments:
+            comment_id, comment = comment
+            _ = f.write(f"{comment_id}: {comment}\n")
+
+
+def create_database(root, reddit: Reddit, start_date, end_date, sentiment_model):
+    start_date = dt.datetime(2024, 9, 14)
+    
+    for i in tqdm(range(365 * 6)):
+        date = start_date - dt.timedelta(days=i)
+        date_str = dt.datetime.strftime(date, "%Y-%m-%d")
+
+        try:
+            summarization, comments = crypto_daily_discussion_summarization(
+                reddit, date.year, date.month, date.day, 100, sentiment_model, True
+            )
+            submission_id = summarization["submission_id"].values[0]
+        except:
+            print("date not found")
+            continue
+
+
+        save_csv_to = f"./data/{date_str}_{submission_id}.csv"
+        save_comments_to = f"./data/{date_str}_{submission_id}.txt"
+
+        summarization.to_csv(save_csv_to)
+
+        with open(save_comments_to, "a") as f:
+            for comment in comments:
+                comment_id, comment = comment
+                _ = f.write(f"{comment_id}: {comment}\n")
