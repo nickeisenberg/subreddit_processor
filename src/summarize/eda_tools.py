@@ -84,19 +84,19 @@ def combine_dfs_by_date_range(start_date: str, end_date: str):
     return pd.concat(dfs).reset_index(drop=True)
 
 
-def coin(symbol: str):
-    def coin_(x):
+def isolate_ticker(symbol: str):
+    def ticker(x):
         sym = symbol
         if sym in x.split():
             return sym
         else:
             return "N/A"
-    return coin_
+    return ticker
 
 
 def replace_tickers_mentioned_with_one_ticker(df: pd.DataFrame, ticker: str):
     _df = deepcopy(df)
-    _df["tickers_mentioned"] = df["tickers_mentioned"].map(coin(ticker))
+    _df["tickers_mentioned"] = df["tickers_mentioned"].map(isolate_ticker(ticker)) 
     return _df.loc[_df["tickers_mentioned"] != "N/A"]
 
 
@@ -162,33 +162,33 @@ def get_close_and_sentiment_df(df: pd.DataFrame, ticker: str):
 
 def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
     combined_sent_and_close = get_close_and_sentiment_df(df, ticker)
-    # dates = pd.to_datetime(combined_sent_and_close["date"].map(lambda x: x.replace("_", "-"))).to_numpy()
     dates = pd.to_datetime(combined_sent_and_close["date"]).to_numpy()
     
-    fig = plt.figure()
-    plt.plot(
-        dates,
-        MinMaxScaler().fit_transform(
-            combined_sent_and_close[ticker].to_numpy().reshape(-1, 1)
-        ).reshape(-1),
-        label="close"
-    )
-    plt.plot(
-        dates,
-        MinMaxScaler().fit_transform(
-            np.cumsum(combined_sent_and_close["sentiment_score"].to_numpy()).reshape(-1, 1)
-        ).reshape(-1),
-        label="sentiment"
-    )
-    plt.legend()
+    close = combined_sent_and_close[ticker].to_numpy()
+    sentiment = np.cumsum(combined_sent_and_close["sentiment_score"].to_numpy())
+
+    # Create the plot
+    fig, ax1 = plt.subplots()
+
+    # Plot the closing prices on the primary y-axis
+    ax1.plot(dates, close, label=f"{ticker} Close", color="blue")
+    ax1.set_ylabel(f"{ticker} Close", color="blue")
+    ax1.tick_params(axis="y", labelcolor="blue")
+    ax1.set_ylim(close.min(), close.max())  # Ensure the axis is explicitly 0 to 1
+
+    # Create a secondary y-axis for sentiment scores
+    ax2 = ax1.twinx()
+    ax2.plot(dates, sentiment, label="Sentiment Score", color="green")
+    ax2.set_ylabel("Sentiment Score", color="green")
+    ax2.tick_params(axis="y", labelcolor="green")
+    ax2.set_ylim(sentiment.min(), sentiment.max())  # Ensure the axis is explicitly -1 to 1
+
+    # Add legends and title
+    fig.suptitle("Sentiment and Close Prices")
+    ax1.legend(loc="upper left")
+    ax2.legend(loc="upper right")
+
     if plot:
         plt.show()
     else:
         return fig
-
-
-if __name__ == "__main__":
-    df = get_all_csv()
-    ticker = "xlm"
-    plot_sentiment_and_close(df, ticker)
-    get_ticker_counts_from_summarization(df)

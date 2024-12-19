@@ -4,7 +4,7 @@ from src.summarize.eda_tools import (
 )
 
 df = get_all_csv(
-    "/home/nicholas/gitrepos/ticker_sentiment/data/all.csv"
+    "/home/nicholas/gitrepos/ticker_sentiment/data/crypto/daily_discussions/all.csv"
 )
-ticker = "ada"
+ticker = "btc"
 plot_sentiment_and_close(df, ticker)
