@@ -159,7 +159,7 @@ def add_crypto_daily_discussion_summary_to_database(
             _ = f.write(f"{comment_id}: {comment}\n")
 
 
-def get_unaccounted_for_crypto_daily_dates(root: str):
+def get_unaccounted_for_crypto_daily_dates(root: str, skip_today: bool = True):
     today = dt.datetime.today()
     today = dt.datetime(year=today.year, month=today.month, day=today.day)
     dates_str= sorted(list(set(
@@ -172,12 +172,14 @@ def get_unaccounted_for_crypto_daily_dates(root: str):
         check += dt.timedelta(days=1)
         if check not in dates_dt:
             get.append(check)
-    get.append(today)
+    if not skip_today:
+        get.append(today)
     return get
 
 
-def update_crypto_datebase_dailies(root: str, reddit: Reddit, sentiment_model: Callable):
-    dates_to_look_for = tqdm(get_unaccounted_for_crypto_daily_dates(root))
+def update_crypto_datebase_dailies(root: str, reddit: Reddit, sentiment_model: Callable,
+                                   skip_today: bool = True):
+    dates_to_look_for = tqdm(get_unaccounted_for_crypto_daily_dates(root, skip_today))
     for i, date in enumerate(dates_to_look_for):
         dates_to_look_for.set_postfix(progress=f"{i + 1} / {len(dates_to_look_for)}")
         try:

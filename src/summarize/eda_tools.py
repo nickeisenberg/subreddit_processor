@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import json
 import datetime as dt
 import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
 
 
 def make_date_id_map():
