@@ -47,6 +47,10 @@ def make_all_csv(root: str, save_to: str):
     return df_with_dates
 
 
+def add_additions_to_all_csv(additions: list[pd.DataFrame] | pd.DataFrame, 
+                             path_to_all_csv: str):
+    pass
+
 def get_all_csv(path: str):
     if not os.path.isfile(path):
         raise Exception("all_csv not found")
