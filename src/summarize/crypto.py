@@ -129,7 +129,8 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
 
 
 def add_crypto_daily_discussion_summary_to_database(
-        root: str, reddit: Reddit, date: str | dt.datetime, sentiment_model: Callable):
+        root: str, reddit: Reddit, date: str | dt.datetime, sentiment_model: Callable,
+        overwrite: bool = False):
     
     if isinstance(date, str):
         date = dt.datetime.strptime(date, "%Y-%m-%d")
@@ -145,6 +146,10 @@ def add_crypto_daily_discussion_summary_to_database(
 
     save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
     save_comments_to = os.path.join(root, f"{date_str}_{submission_id}.txt")
+    
+    if not overwrite:
+        if os.path.isfile(save_csv_to) or os.path.isfile(save_comments_to):
+            raise Exception("file already exists")
 
     summarization.to_csv(save_csv_to)
 
@@ -152,3 +157,32 @@ def add_crypto_daily_discussion_summary_to_database(
         for comment in comments:
             comment_id, comment = comment
             _ = f.write(f"{comment_id}: {comment}\n")
+
+
+def get_unaccounted_for_crypto_daily_dates(root: str):
+    today = dt.datetime.today()
+    today = dt.datetime(year=today.year, month=today.month, day=today.day)
+    dates_str= sorted(list(set(
+        [x.split("_")[0] for x in os.listdir(root)]
+    )))
+    dates_dt = [dt.datetime.strptime(x, "%Y-%m-%d") for x in dates_str]
+    get = []
+    check = dates_dt[0]
+    while check < today:
+        check += dt.timedelta(days=1)
+        if check not in dates_dt:
+            get.append(check)
+    get.append(today)
+    return get
+
+
+def update_crypto_datebase_dailies(root: str, reddit: Reddit, sentiment_model: Callable):
+    dates_to_look_for = tqdm(get_unaccounted_for_crypto_daily_dates(root))
+    for i, date in enumerate(dates_to_look_for):
+        dates_to_look_for.set_postfix(progress=f"{i + 1} / {len(dates_to_look_for)}")
+        try:
+            add_crypto_daily_discussion_summary_to_database(
+                root, reddit, date, sentiment_model
+            )
+        except Exception as e:
+            print(e)
