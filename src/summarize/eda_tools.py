@@ -23,15 +23,15 @@ def get_date_to_id_map(path="data/date_id_key.json"):
         return json.load(f)
 
 
-def make_all_csv(save_to="./data/all.csv"):
+def make_all_csv(root: str, save_to: str):
     paths = sorted(
         [
-            os.path.join("data", "individual", x) 
-            for x in os.listdir("./data/individual") if x.endswith(".csv")
+            os.path.join(root, x) 
+            for x in os.listdir(root) if x.endswith(".csv")
         ]
     )
-    dates = [x.split("_")[0].split("/")[-1] for x in paths]
-    ids = [x.split("_")[1].split(".")[0] for x in paths]
+    dates = [os.path.basename(x).split("_")[0].split("/")[-1] for x in paths]
+    ids = [os.path.basename(x).split("_")[1].split(".")[0] for x in paths]
     id_date = [[x, y] for x, y in zip(ids, dates)]
     id_date_df = pd.DataFrame(id_date, columns=pd.Series(["submission_id", "date"]))
     dfs = [
@@ -48,7 +48,7 @@ def make_all_csv(save_to="./data/all.csv"):
     return df_with_dates
 
 
-def get_all_csv(path="./data/all.csv"):
+def get_all_csv(path: str):
     if not os.path.isfile(path):
         raise Exception("all_csv not found")
     else:
