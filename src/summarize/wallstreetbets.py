@@ -7,6 +7,7 @@ from praw import Reddit
 from praw.models import MoreComments
 from praw.reddit import Submission
 
+from src.summarize.summarize_tools import submission_sentiment_summarization
 
 try:
     from ..praw_tools import (
@@ -68,7 +69,7 @@ def get_daily_discussion_title(year: int, month: int, day: int):
         return titles
 
 
-def get_wsb_discussion_submission(reddit: Reddit, year: int, 
+def get_daily_discussion_submission(reddit: Reddit, year: int, 
                                            month: int, day: int) -> Submission:
     titles = get_daily_discussion_title(year, month, day)
     try:
@@ -83,8 +84,18 @@ def get_wsb_discussion_submission(reddit: Reddit, year: int,
         raise e
 
 
+def get_todays_daily_discussion_title():
+    date = dt.datetime.now()
+    return get_daily_discussion_title(date.year, date.month, date.day)
+
+
+def get_todays_daily_discussion_submission(reddit: Reddit) -> Submission:
+    date = dt.datetime.now()
+    return get_daily_discussion_submission(reddit, date.year, date.month, date.day)
+
+
 if __name__ == "__main__":
-    from src.praw_tools import quick_reddit
+    from src.praw_tools import get_reddit_client 
     get_daily_discussion_title(2024, 12, 15)
-    reddit = quick_reddit()
+    reddit = get_reddit_client()
     sub = get_wsb_discussion_submission(reddit, 2024, 12, 15)

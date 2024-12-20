@@ -40,5 +40,4 @@ def get_tickers_from_string(sentence: str, symbol_to_name_map: dict,
             x.append(symbol_to_name_map[word])
         elif word in name_to_symbol_map:
             x.append(name_to_symbol_map[word])
-
-    return x
+    return list(set(x))
