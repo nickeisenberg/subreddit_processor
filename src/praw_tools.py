@@ -1,5 +1,13 @@
 from praw import Reddit
 from praw.reddit import Submission, Subreddit
+import os
+
+def quick_reddit():
+    return get_reddit_client(
+        client_id=os.environ["PRAW_CLIENT_ID"],
+        client_secret=os.environ["PRAW_CLIENT_SECRET"],
+        user_agent=os.environ["PRAW_USER_AGENT"]
+    )
 
 
 def get_reddit_client(client_id: str, client_secret: str, 
