@@ -2,16 +2,10 @@ from praw import Reddit
 from praw.reddit import Submission, Subreddit
 import os
 
-def quick_reddit():
-    return get_reddit_client(
-        client_id=os.environ["PRAW_CLIENT_ID"],
-        client_secret=os.environ["PRAW_CLIENT_SECRET"],
-        user_agent=os.environ["PRAW_USER_AGENT"]
-    )
 
-
-def get_reddit_client(client_id: str, client_secret: str, 
-                      user_agent: str) -> Reddit:
+def get_reddit_client(client_id: str = os.environ["PRAW_CLIENT_ID"],
+                      client_secret: str = os.environ["PRAW_CLIENT_SECRET"],
+                      user_agent: str = os.environ["PRAW_USER_AGENT"]):
         return Reddit(
             client_id=client_id,
             client_secret=client_secret,
@@ -95,8 +89,15 @@ def get_comments_from_submission_list(submission_list: list[Submission],
     return submission_coms
 
 
+def get_submission_from_id(reddit: Reddit,
+                           submission_id: str):
+    return reddit.submission(submission_id)
+
+
 def get_comments_from_submission_id(reddit: Reddit,
                                     submission_id: str,
                                     replace_more_limit=0):
-    submission: Submission = reddit.submission(submission_id)
-    return  get_comments_from_submission(submission, replace_more_limit)
+    return  get_comments_from_submission(
+        submission=get_submission_from_id(reddit, submission_id),
+        replace_more_limit=replace_more_limit
+    )
