@@ -23,6 +23,7 @@ except:
 
 
 def submission_sentiment_summarization(submission: Submission,
+                                       comment_preprocesser: Callable[[str], str],
                                        sentiment_model: Callable,
                                        ticker_finder: Callable[[str], Iterable[str]],
                                        return_comments: bool = False):
@@ -46,7 +47,7 @@ def submission_sentiment_summarization(submission: Submission,
 
         comment_id = praw_comment.id
 
-        comment = lower_text_and_remove_all_non_asci(
+        comment = comment_preprocesser(
             praw_comment.body
         )
 
@@ -67,10 +68,10 @@ def submission_sentiment_summarization(submission: Submission,
             (
                 summarization, 
                 pd.DataFrame(
-                    data=[
+                    data=[[
                         submission_id, comment_id, sentiment_label, 
                         sentiment_score, tickers
-                    ],
+                    ]],
                     columns=summarization.columns
                 )
             )

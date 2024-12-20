@@ -2,7 +2,7 @@ import os
 import datetime as dt
 from tqdm import tqdm
 import pandas as pd
-from typing import Callable
+from typing import Callable, Iterable
 from praw import Reddit
 from praw.models import MoreComments
 from praw.reddit import Submission
@@ -32,6 +32,8 @@ except:
         get_tickers_from_string,
         get_ticker_and_name_map
     )
+
+from src.summarize.summarize_tools import submission_sentiment_summarization
 
 
 def get_crypto_daily_discussion_title(year: int, month: int, day: int):
@@ -69,6 +71,34 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
                                           num_top_cyptos: int,
                                           sentiment_model: Callable,
                                           return_comments: bool = False):
+
+    submission = get_crypto_daily_discussion_submission(
+        reddit, year, month, day
+    )
+
+    sts, nts = get_ticker_and_name_map(num_top_cyptos)
+    def ticker_finder(comment: str):
+        return get_tickers_from_string(
+            comment, sts, nts
+        )
+    
+    return submission_sentiment_summarization(
+        submission=submission,
+        comment_preprocesser=lower_text_and_remove_all_non_asci,
+        sentiment_model=sentiment_model,
+        ticker_finder=ticker_finder,
+        return_comments=return_comments
+    )
+
+
+def crypto_daily_discussion_summarization_old(reddit: Reddit,
+                                          year: int,
+                                          month: int,
+                                          day: int, 
+                                          num_top_cyptos: int,
+                                          sentiment_model: Callable,
+                                          return_comments: bool = False):
+    """will delete soon"""
     columns = pd.Series(
         ["submission_id", "comment_id", "sentiment", "sentiment_score", "tickers_mentioned"]
     )
@@ -188,3 +218,6 @@ def update_crypto_datebase_dailies(root: str, reddit: Reddit, sentiment_model: C
             )
         except Exception as e:
             print(e)
+
+
+
