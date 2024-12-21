@@ -1,10 +1,8 @@
 import os
 import datetime as dt
 from tqdm import tqdm
-import pandas as pd
 from typing import Callable
 from praw import Reddit
-from praw.models import MoreComments
 from praw.reddit import Submission
 from pycoingecko import CoinGeckoAPI
 

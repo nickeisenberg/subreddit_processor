@@ -14,15 +14,6 @@ except:
         get_comments_from_submission,
     )
 
-try:
-    from ..text_processing import (
-        lower_text_and_remove_all_non_asci,
-    )
-except:
-    from src.text_processing import (
-        lower_text_and_remove_all_non_asci,
-    )
-
 
 def submission_sentiment_summarization(submission: Submission,
                                        comment_preprocesser: Callable[[str], str],
