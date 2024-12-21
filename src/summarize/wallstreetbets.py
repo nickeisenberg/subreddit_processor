@@ -8,6 +8,7 @@ from praw.models import MoreComments
 from praw.reddit import Submission
 
 from src.summarize.summarize_tools import submission_sentiment_summarization
+from src.text_processing import lower_text_and_remove_all_non_asci
 
 try:
     from ..praw_tools import (
@@ -34,6 +35,31 @@ except:
         get_tickers_from_string,
         get_ticker_and_name_map
     )
+
+
+def get_ticker_finder(path: str):
+    """
+    desgined for this dataframe. this does not include index tickers.
+    https://github.com/JerBouma/FinanceDatabase/blob/main/database/equities.csv
+    """
+    equities = pd.read_csv(path)
+    def rm(x):
+        try:
+            if "^" in x:
+                return "N/A"
+            else:
+                return x
+        except:
+            return "N/A"
+    where = equities["symbol"].map(rm) != "N/A"
+    tickers = equities.loc[where]["symbol"].dropna().map(lambda x: x.lower()).to_list()
+    def ticker_finder(sentance: str):
+        tickers_found = []
+        for word in lower_text_and_remove_all_non_asci(sentance).split():
+            if word in tickers:
+                tickers_found.append(word)
+        return tickers_found
+    return ticker_finder
 
 
 def get_daily_discussion_title(year: int, month: int, day: int):
@@ -98,4 +124,4 @@ if __name__ == "__main__":
     from src.praw_tools import get_reddit_client 
     get_daily_discussion_title(2024, 12, 15)
     reddit = get_reddit_client()
-    sub = get_wsb_discussion_submission(reddit, 2024, 12, 15)
+    sub = get_daily_discussion_submission(reddit, 2024, 12, 15)
