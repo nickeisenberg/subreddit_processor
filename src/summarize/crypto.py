@@ -49,7 +49,6 @@ def make_ticker_and_name_map(top: int):
         name = crypto["name"].lower()
         sym_to_sym[sym] = sym
         name_to_sym[name] = sym
-
     return sym_to_sym, name_to_sym
 
 

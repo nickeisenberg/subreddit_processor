@@ -1,4 +1,5 @@
 from copy import deepcopy
+import json
 import os
 import numpy as np
 import pandas as pd
@@ -8,16 +9,16 @@ import datetime as dt
 import yfinance as yf
 
 
-def make_date_id_map():
-    paths = sorted(
-        [os.path.join("data", "individual", x) for x in os.listdir("./data/individual") if x.endswith(".csv")]
-    )
-    dates = [x.split("_")[0].split("/")[-1] for x in paths]
-    ids = [x.split("_")[1].split(".")[0] for x in paths]
-    return {d: id for d, id in zip(dates, ids)}
+def make_date_id_map(root: str, save_to: str | None = None):
+    basenames = [x for x in os.listdir(root) if x.endswith(".csv")]
+    date_to_id_map = {xx[0]: xx[1] for xx in [x.split(".")[0].split("_") for x in basenames]}
+    if save_to:
+        with open(save_to, "w") as write:
+            json.dump(date_to_id_map, write, indent=4)
+    return date_to_id_map
 
 
-def get_date_to_id_map(path="data/date_id_key.json"):
+def get_date_to_id_map(path):
     with open(path, "r") as f:
         return json.load(f)
 
@@ -47,11 +48,6 @@ def make_all_csv(root: str, save_to: str):
     return df_with_dates
 
 
-def add_additions_to_all_csv(additions: list[pd.DataFrame] | pd.DataFrame, 
-                             path_to_all_csv: str):
-    pass
-
-
 def get_all_csv(path: str):
     if not os.path.isfile(path):
         raise Exception("all_csv not found")
@@ -59,7 +55,7 @@ def get_all_csv(path: str):
         return pd.read_csv(path, index_col=0, na_values=[], keep_default_na=False)
 
 
-def combine_dfs_by_date_range(start_date: str, end_date: str):
+def combine_dfs_by_date_range(root:str, start_date: str, end_date: str):
     with open("data/date_id_key.json", "r") as f:
         date_id_map = json.load(f)
             
@@ -73,7 +69,7 @@ def combine_dfs_by_date_range(start_date: str, end_date: str):
     before = True
     while before:
         current_date = current.strftime("%Y_%m_%d")
-        current_path = f"./data/individual/{current_date}-{date_id_map[current_date]}.csv"
+        current_path = os.path.join(root, f"{current_date}-{date_id_map[current_date]}.csv")
         if os.path.isfile(current_path):
             df = pd.read_csv(
                 current_path, index_col=0, na_values=[], keep_default_na=False
