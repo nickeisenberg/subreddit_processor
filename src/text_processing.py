@@ -1,6 +1,5 @@
 import re
 import string
-from pycoingecko import CoinGeckoAPI
 
 
 def remove_all_non_asci(text: str):
@@ -14,21 +13,6 @@ def remove_all_non_asci(text: str):
 
 def lower_text_and_remove_all_non_asci(text: str):
     return remove_all_non_asci(text.lower().strip())
-
-
-def get_ticker_and_name_map(top: int):
-    sym_to_sym = {}
-    name_to_sym = {}
-    cg = CoinGeckoAPI()
-    cryptos = cg.get_coins_markets(
-        vs_currency='usd', order='market_cap_desc', per_page=top, page=1
-    )
-    for crypto in cryptos:
-        sym = crypto["symbol"].lower()
-        name = crypto["name"].lower()
-        sym_to_sym[sym] = sym
-        name_to_sym[name] = sym
-    return sym_to_sym, name_to_sym
 
 
 def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 

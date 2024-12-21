@@ -2,10 +2,11 @@ import os
 import datetime as dt
 from tqdm import tqdm
 import pandas as pd
-from typing import Callable, Iterable
+from typing import Callable
 from praw import Reddit
 from praw.models import MoreComments
 from praw.reddit import Submission
+from pycoingecko import CoinGeckoAPI
 
 try:
     from ..praw_tools import (
@@ -24,16 +25,43 @@ try:
     from ..text_processing import (
         lower_text_and_remove_all_non_asci,
         get_tickers_from_string,
-        get_ticker_and_name_map
     )
 except:
     from src.text_processing import (
         lower_text_and_remove_all_non_asci,
         get_tickers_from_string,
-        get_ticker_and_name_map
     )
 
-from src.summarize.summarize_tools import submission_sentiment_summarization
+from src.summarize.summarize_tools import (
+    submission_sentiment_summarization,
+    write_submission_summary_to_csv,
+    write_submission_comments_to_txt
+)
+
+
+def make_ticker_and_name_map(top: int):
+    sym_to_sym = {}
+    name_to_sym = {}
+    cg = CoinGeckoAPI()
+    cryptos = cg.get_coins_markets(
+        vs_currency='usd', order='market_cap_desc', per_page=top, page=1
+    )
+    for crypto in cryptos:
+        sym = crypto["symbol"].lower()
+        name = crypto["name"].lower()
+        sym_to_sym[sym] = sym
+        name_to_sym[name] = sym
+
+    return sym_to_sym, name_to_sym
+
+
+def get_crypto_ticker_finder(top: int) -> Callable[[str], list[str]]:
+    sts, nts = make_ticker_and_name_map(top)
+    def ticker_finder(comment: str):
+        return get_tickers_from_string(
+            comment, sts, nts
+        )
+    return ticker_finder
 
 
 def get_crypto_daily_discussion_title(year: int, month: int, day: int):
@@ -68,20 +96,12 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
                                           year: int,
                                           month: int,
                                           day: int, 
-                                          num_top_cyptos: int,
+                                          ticker_finder: Callable[[str], list[str]],
                                           sentiment_model: Callable,
                                           return_comments: bool = False):
-
     submission = get_crypto_daily_discussion_submission(
         reddit, year, month, day
     )
-
-    sts, nts = get_ticker_and_name_map(num_top_cyptos)
-    def ticker_finder(comment: str):
-        return get_tickers_from_string(
-            comment, sts, nts
-        )
-    
     return submission_sentiment_summarization(
         submission=submission,
         comment_preprocesser=lower_text_and_remove_all_non_asci,
@@ -91,102 +111,45 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
     )
 
 
-def crypto_daily_discussion_summarization_old(reddit: Reddit,
-                                          year: int,
-                                          month: int,
-                                          day: int, 
-                                          num_top_cyptos: int,
-                                          sentiment_model: Callable,
-                                          return_comments: bool = False):
-    """will delete soon"""
-    columns = pd.Series(
-        ["submission_id", "comment_id", "sentiment", "sentiment_score", "tickers_mentioned"]
-    )
-    summarization = pd.DataFrame(
-        columns=columns,
-        dtype=object
-    )
-
-    submission = get_crypto_daily_discussion_submission(
-        reddit, year, month, day
-    )
-    submission_id = submission.id
-
-    comments = []
-
-    sts, nts = get_ticker_and_name_map(num_top_cyptos)
-    for praw_comment in get_comments_from_submission(submission):
-        if isinstance(praw_comment, MoreComments):
-            continue
-
-        comment = lower_text_and_remove_all_non_asci(
-            praw_comment.body
-        )
-
-        if len(comment) > 512:
-            continue
-
-        comment_id = praw_comment.id
-
-        if return_comments:
-            comments.append([comment_id, comment])
-        
-        sentiment = sentiment_model(comment)
-
-        sentiment_label = sentiment[0]["label"]
-        sentiment_score = sentiment[0]["score"]
-
-        tickers = get_tickers_from_string(
-            comment, sts, nts
-        )
-
-        tickers = ", ".join(tickers) if tickers else "N/A"
-        
-        data = [submission_id, comment_id, sentiment_label, sentiment_score, tickers] 
-
-        comment_summarization = pd.DataFrame(
-            data=[data],
-            columns=columns
-        )
-
-
-        summarization = pd.concat((summarization, comment_summarization))
-    
-    if not return_comments:
-        return summarization
-    else:
-        return summarization, comments
-
-
 def add_crypto_daily_discussion_summary_to_database(
-        root: str, reddit: Reddit, date: str | dt.datetime, sentiment_model: Callable,
+        root: str, reddit: Reddit, date: str | dt.datetime, 
+        ticker_finder: Callable[[str], list[str]], sentiment_model: Callable,
         overwrite: bool = False):
-    
+    """if date is a string then it is of the form YEAR-MONTH-DAY, ie, 2024-1-1"""
     if isinstance(date, str):
         date = dt.datetime.strptime(date, "%Y-%m-%d")
-    date_str = dt.datetime.strftime(date, "%Y-%m-%d")
 
     try:
         summarization, comments = crypto_daily_discussion_summarization(
-            reddit, date.year, date.month, date.day, 100, sentiment_model, True
+            reddit=reddit, year=date.year, month=date.month, day=date.day, 
+            ticker_finder=ticker_finder, sentiment_model=sentiment_model, 
+            return_comments=True
         )
         submission_id = summarization["submission_id"].values[0]
     except:
         raise Exception("date not found")
-
-    save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
-    save_comments_to = os.path.join(root, f"{date_str}_{submission_id}.txt")
     
-    if not overwrite:
-        if os.path.isfile(save_csv_to) or os.path.isfile(save_comments_to):
-            raise Exception("file already exists")
+    try:
+        write_submission_summary_to_csv(
+            summary=summarization, 
+            root=root, 
+            submission_id=submission_id, 
+            date=date,
+            overwrite=overwrite
+        )
+    except Exception as e:
+        raise e
 
-    summarization.to_csv(save_csv_to)
-
-    with open(save_comments_to, "a") as f:
-        for comment in comments:
-            comment_id, comment = comment
-            _ = f.write(f"{comment_id}: {comment}\n")
+    try:
+        write_submission_comments_to_txt(
+            comments=comments, 
+            root=root, 
+            submission_id=submission_id, 
+            date=date,
+            overwrite=overwrite
+        )
+    except Exception as e:
+        raise e
 
 
 def get_unaccounted_for_crypto_daily_dates(root: str, skip_today: bool = True):
@@ -207,17 +170,25 @@ def get_unaccounted_for_crypto_daily_dates(root: str, skip_today: bool = True):
     return get
 
 
-def update_crypto_datebase_dailies(root: str, reddit: Reddit, sentiment_model: Callable,
+def update_crypto_datebase_dailies(root: str, reddit: Reddit,
+                                   ticker_finder: Callable[[str], list[str]],
+                                   sentiment_model: Callable,
                                    skip_today: bool = True):
     dates_to_look_for = tqdm(get_unaccounted_for_crypto_daily_dates(root, skip_today))
     for i, date in enumerate(dates_to_look_for):
         dates_to_look_for.set_postfix(progress=f"{i + 1} / {len(dates_to_look_for)}")
         try:
             add_crypto_daily_discussion_summary_to_database(
-                root, reddit, date, sentiment_model
+                root=root, reddit=reddit, date=date, ticker_finder=ticker_finder,
+                sentiment_model=sentiment_model
             )
         except Exception as e:
             print(e)
 
 
-
+if __name__ == "__main__":
+    from src.sentiment_models import get_fin_bert
+    fin_bert = get_fin_bert()
+    reddit = get_reddit_client()
+    finder = get_crypto_ticker_finder(100)
+    sum0 = crypto_daily_discussion_summarization(reddit, 2024, 12, 20, finder, fin_bert)
