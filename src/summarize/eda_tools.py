@@ -110,6 +110,12 @@ def get_ticker_counts_by_date(df: pd.DataFrame, ticker: str):
     return tick_df.groupby("date")["tickers_mentioned"].count()
 
 
+def get_pos_neutral_neg_from_daily(df: pd.DataFrame, ticker: str | None = None):
+    if ticker:
+        df = replace_tickers_mentioned_with_one_ticker(df, ticker)
+    return df.groupby("sentiment")["sentiment_score"].mean()
+
+
 def get_pos_neutral_neg_by_date(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
         df = replace_tickers_mentioned_with_one_ticker(df, ticker)
