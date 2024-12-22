@@ -1,16 +1,20 @@
 import os
 lines = 0
-for root, dir, files in os.walk("./"):
+for root, dir, files in os.walk("/home/nicholas/gitrepos/ticker_sentiment"):
     for f in files:
-        if f.endswith(".pyc"):
+        fpath = os.path.join(root, f)
+        if fpath.endswith(".pyc"):
             continue
-        if f.endswith(".git"):
+        if ".git" in fpath:
             continue
-        if f.endswith(".txt"):
+        if fpath.endswith(".txt"):
             continue
-        if f.endswith(".csv"):
+        if fpath.endswith(".csv"):
             continue
-        with open(os.path.join(root, f), "r") as ff:
-            lines += len(ff.readlines())
+        try:
+            with open(fpath, "r") as ff:
+               lines += len(ff.readlines())
+        except:
+            print(os.path.join(root, f))
 print(lines)
 
