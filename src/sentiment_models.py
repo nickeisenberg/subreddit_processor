@@ -1,3 +1,4 @@
+from typing import Callable, cast
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -6,14 +7,20 @@ from transformers import (
 from transformers import pipeline
 
 
-def get_fin_bert(device="cpu"):
+def get_fin_bert(device="cpu") -> Callable[[str], tuple[str, float]]:
     model_name = "ProsusAI/finbert"
-    return pipeline(
+    finbert = pipeline(
         task="sentiment-analysis", 
         model=AutoModelForSequenceClassification.from_pretrained(model_name).to(device),
         tokenizer=AutoTokenizer.from_pretrained(model_name),
         device=device
     )
+    def finbert_(sentence: str):
+        sent: dict = finbert(sentence)[0]
+        finbert.call_count = 0
+        return sent["label"], sent["score"]
+    return finbert_
+
 
 if __name__ == "__main__":
     from torch.utils.data import Dataset, DataLoader

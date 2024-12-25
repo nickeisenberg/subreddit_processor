@@ -17,9 +17,11 @@ except:
 
 def submission_sentiment_summarization(submission: Submission,
                                        comment_preprocesser: Callable[[str], str],
-                                       sentiment_model: Callable,
+                                       sentiment_model: Callable[[str], tuple[str, float]],
                                        ticker_finder: Callable[[str], Iterable[str]],
                                        return_comments: bool = False):
+    submission_id = submission.id
+
     summarization_columns=pd.Series(
         [
             "submission_id", "comment_id", "sentiment", "sentiment_score", 
@@ -27,12 +29,8 @@ def submission_sentiment_summarization(submission: Submission,
         ]
     )
 
-    comment_summarizations = []
-
-    submission_id = submission.id
-
     comments = []
-
+    comment_summarizations = []
     for praw_comment in get_comments_from_submission(submission):
         if isinstance(praw_comment, MoreComments):
             continue
@@ -49,9 +47,7 @@ def submission_sentiment_summarization(submission: Submission,
         if return_comments:
             comments.append([comment_id, comment])
         
-        sentiment = sentiment_model(comment)
-        sentiment_label = sentiment[0]["label"]
-        sentiment_score = sentiment[0]["score"]
+        sentiment_label, sentiment_score = sentiment_model(comment)
 
         tickers = ticker_finder(comment)
         tickers = ", ".join(tickers) if tickers else "N/A"
