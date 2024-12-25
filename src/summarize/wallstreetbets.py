@@ -148,14 +148,15 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
 
 
 if __name__ == "__main__":
-
     from src.praw_tools import get_reddit_client 
     from src.sentiment_models import get_fin_bert
-
+    
     reddit = get_reddit_client()
+    
     path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
     finder = get_ticker_finder(path)
-    finbert = get_fin_bert()
+    
+    finbert = get_fin_bert("cuda")
     
     sum, coms = wsb_daily_discussion_summarization(
         reddit, 

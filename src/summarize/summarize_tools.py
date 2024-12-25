@@ -20,15 +20,14 @@ def submission_sentiment_summarization(submission: Submission,
                                        sentiment_model: Callable,
                                        ticker_finder: Callable[[str], Iterable[str]],
                                        return_comments: bool = False):
-    summarization = pd.DataFrame(
-        columns=pd.Series(
-            [
-                "submission_id", "comment_id", "sentiment", "sentiment_score", 
-                "tickers_mentioned"
-            ]
-        ),
-        dtype=object
+    summarization_columns=pd.Series(
+        [
+            "submission_id", "comment_id", "sentiment", "sentiment_score", 
+            "tickers_mentioned"
+        ]
     )
+
+    comment_summarizations = []
 
     submission_id = submission.id
 
@@ -57,18 +56,17 @@ def submission_sentiment_summarization(submission: Submission,
         tickers = ticker_finder(comment)
         tickers = ", ".join(tickers) if tickers else "N/A"
 
-        summarization = pd.concat(
-            (
-                summarization, 
-                pd.DataFrame(
-                    data=[[
-                        submission_id, comment_id, sentiment_label, 
-                        sentiment_score, tickers
-                    ]],
-                    columns=summarization.columns
-                )
+        comment_summarizations.append(
+            pd.DataFrame(
+                data=[[
+                    submission_id, comment_id, sentiment_label, 
+                    sentiment_score, tickers
+                ]],
+                columns=summarization_columns
             )
         )
+
+    summarization = pd.concat(comment_summarizations)
     
     if not return_comments:
         return summarization

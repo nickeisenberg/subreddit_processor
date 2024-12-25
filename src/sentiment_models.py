@@ -14,3 +14,23 @@ def get_fin_bert(device="cpu"):
         tokenizer=AutoTokenizer.from_pretrained(model_name),
         device=device
     )
+
+if __name__ == "__main__":
+    from torch.utils.data import Dataset, DataLoader
+    
+    class FakeDataset(Dataset):
+        def __init__(self):
+            self._data = [
+                f"word_{i}" for i in range(100)
+            ]
+    
+        def __getitem__(self, idx):
+            return self._data[idx]
+    
+        def __len__(self):
+            return len(self._data)
+    
+    loader = DataLoader(FakeDataset(), 4)
+    finbert = get_fin_bert()
+    
+    finbert(next(iter(loader)))
