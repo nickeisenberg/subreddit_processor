@@ -1,4 +1,5 @@
-from typing import Callable, cast
+from typing import Callable
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -7,37 +8,46 @@ from transformers import (
 from transformers import pipeline
 
 
-def get_fin_bert(device="cpu") -> Callable[[str], tuple[str, float]]:
+def get_finbert(device="cpu") -> Callable[[str], tuple[str, float]]:
     model_name = "ProsusAI/finbert"
-    finbert = pipeline(
+    finbert_pipeline = pipeline(
         task="sentiment-analysis", 
         model=AutoModelForSequenceClassification.from_pretrained(model_name).to(device),
         tokenizer=AutoTokenizer.from_pretrained(model_name),
         device=device
     )
     def finbert_(sentence: str):
-        sent: dict = finbert(sentence)[0]
-        finbert.call_count = 0
+        sent: dict = finbert_pipeline(sentence)[0]
+        finbert_pipeline.call_count = 0
         return sent["label"], sent["score"]
     return finbert_
 
 
+def get_vader(neg_cutoff: float = -.1, 
+              pos_cutoff: float = .1) -> Callable[[str], tuple[str, float]]:
+    sid_obj = SentimentIntensityAnalyzer()
+    def vader_(sentence: str):
+        sentiment_dict = sid_obj.polarity_scores(sentence)
+        compound = sentiment_dict['compound']
+        if compound >= pos_cutoff :
+            return "positive", compound
+        elif compound <= neg_cutoff :
+            return "negative", -1 * compound
+        else:
+            if compound > 0:
+                return "neutral", compound
+            else:
+                return "neutral", -1 * compound
+    return vader_
+
+
 if __name__ == "__main__":
-    from torch.utils.data import Dataset, DataLoader
-    
-    class FakeDataset(Dataset):
-        def __init__(self):
-            self._data = [
-                f"word_{i}" for i in range(100)
-            ]
-    
-        def __getitem__(self, idx):
-            return self._data[idx]
-    
-        def __len__(self):
-            return len(self._data)
-    
-    loader = DataLoader(FakeDataset(), 4)
-    finbert = get_fin_bert()
-    
-    finbert(next(iter(loader)))
+    finbert = get_finbert()
+    vader = get_vader()
+    sentence = "btc is saving me"
+    vader(sentence)
+    finbert(sentence)
+    sentence = "btc is shit"
+    vader(sentence)
+    finbert(sentence)
+
