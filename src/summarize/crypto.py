@@ -99,8 +99,11 @@ def crypto_daily_discussion_summarization(
         comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[str, float]],
         ticker_finder: Callable[[str], list[str]],
-        return_comments: bool = False):
-    return submission_sentiment_summarization(
+        return_comments: bool = False, 
+        add_summary_to_database: bool = False, 
+        add_comments_to_database: bool = False, 
+        root: str | None = None):
+    summary =  submission_sentiment_summarization(
         submission=get_crypto_daily_discussion_submission(
             reddit, year, month, day
         ),
@@ -109,6 +112,11 @@ def crypto_daily_discussion_summarization(
         ticker_finder=ticker_finder,
         return_comments=return_comments
     )
+
+    if add_to_database:
+        pass
+
+    return summary
 
 
 def add_crypto_daily_discussion_summary_to_database(
@@ -194,11 +202,3 @@ fin_bert = get_finbert()
 reddit = get_reddit_client()
 finder = get_crypto_ticker_finder(100)
 sub = get_todays_crypto_daily_discussion_submission(reddit)
-
-
-
-
-
-
-
-
