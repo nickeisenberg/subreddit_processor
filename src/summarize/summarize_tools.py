@@ -22,10 +22,12 @@ def submission_sentiment_summarization(submission: Submission,
                                        return_comments: bool = False):
     submission_id = submission.id
 
+    date = dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
+
     summarization_columns=pd.Series(
         [
-            "submission_id", "comment_id", "sentiment", "sentiment_score", 
-            "tickers_mentioned"
+            "date", "submission_id", "comment_id", "sentiment", 
+            "sentiment_score", "tickers_mentioned"
         ]
     )
 
@@ -46,7 +48,7 @@ def submission_sentiment_summarization(submission: Submission,
 
         if return_comments:
             comments.append([comment_id, comment])
-        
+
         sentiment_label, sentiment_score = sentiment_model(comment)
 
         tickers = ticker_finder(comment)
@@ -55,7 +57,7 @@ def submission_sentiment_summarization(submission: Submission,
         comment_summarizations.append(
             pd.DataFrame(
                 data=[[
-                    submission_id, comment_id, sentiment_label, 
+                    date, submission_id, comment_id, sentiment_label, 
                     sentiment_score, tickers
                 ]],
                 columns=summarization_columns
@@ -69,38 +71,3 @@ def submission_sentiment_summarization(submission: Submission,
 
     else:
         return summarization, comments
-
-
-def write_submission_summary_to_csv(summary: pd.DataFrame, root:str,
-                                    submission_id: int,
-                                    date: str | dt.datetime,
-                                    overwrite: bool = False):
-    if isinstance(date, str):
-        date = dt.datetime.strptime(date, "%Y-%m-%d")
-    date_str = dt.datetime.strftime(date, "%Y-%m-%d")
-
-    save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
-
-    if not overwrite and os.path.isfile(save_csv_to):
-        raise Exception(f"{save_csv_to} exists")
-
-    summary.to_csv(save_csv_to)
-
-
-def write_submission_comments_to_txt(comments: list[str], root:str,
-                                     submission_id: int,
-                                     date: str | dt.datetime,
-                                     overwrite: bool = False):
-    if isinstance(date, str):
-        date = dt.datetime.strptime(date, "%Y-%m-%d")
-    date_str = dt.datetime.strftime(date, "%Y-%m-%d")
-
-    save_comments_to = os.path.join(root, f"{date_str}_{submission_id}.txt")
-    
-    if not overwrite and os.path.isfile(save_comments_to):
-        raise Exception(f"{save_comments_to} exists")
-
-    with open(save_comments_to, "a") as f:
-        for comment in comments:
-            comment_id, comment = comment
-            _ = f.write(f"{comment_id}: {comment}\n")

@@ -73,10 +73,12 @@ def get_crypto_daily_discussion_submission(reddit: Reddit, year: int,
     title = get_crypto_daily_discussion_title(year, month, day)
     try:
         return get_submission_list_by_search(
-            reddit.subreddit("cryptocurrency"), title, no_of_submissions=1
+            subreddit=reddit.subreddit("cryptocurrency"), 
+            search=title, 
+            no_of_submissions=1
         )[0]
     except:
-        raise Exception("Can't find the daily chat")
+        raise Exception(f"Can't find {title}")
 
 
 def get_todays_crypto_daily_discussion_title():
@@ -89,19 +91,20 @@ def get_todays_crypto_daily_discussion_submission(reddit: Reddit) -> Submission:
     return get_crypto_daily_discussion_submission(reddit, date.year, date.month, date.day)
 
 
-def crypto_daily_discussion_summarization(reddit: Reddit,
-                                          year: int,
-                                          month: int,
-                                          day: int, 
-                                          ticker_finder: Callable[[str], list[str]],
-                                          sentiment_model: Callable,
-                                          return_comments: bool = False):
-    submission = get_crypto_daily_discussion_submission(
-        reddit, year, month, day
-    )
+def crypto_daily_discussion_summarization(
+        reddit: Reddit,
+        year: int,
+        month: int,
+        day: int, 
+        comment_preprocesser: Callable[[str], str],
+        sentiment_model: Callable[[str], tuple[str, float]],
+        ticker_finder: Callable[[str], list[str]],
+        return_comments: bool = False):
     return submission_sentiment_summarization(
-        submission=submission,
-        comment_preprocesser=lower_text_and_remove_all_non_asci,
+        submission=get_crypto_daily_discussion_submission(
+            reddit, year, month, day
+        ),
+        comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
         return_comments=return_comments
@@ -110,7 +113,7 @@ def crypto_daily_discussion_summarization(reddit: Reddit,
 
 def add_crypto_daily_discussion_summary_to_database(
         root: str, reddit: Reddit, date: str | dt.datetime, 
-        ticker_finder: Callable[[str], list[str]], sentiment_model: Callable,
+        sentiment_model: Callable, ticker_finder: Callable[[str], list[str]], 
         overwrite: bool = False):
     """if date is a string then it is of the form YEAR-MONTH-DAY, ie, 2024-1-1"""
     if isinstance(date, str):
@@ -184,8 +187,18 @@ def update_crypto_datebase_dailies(root: str, reddit: Reddit,
 
 
 if __name__ == "__main__":
-    from src.sentiment_models import get_fin_bert
-    fin_bert = get_fin_bert()
-    reddit = get_reddit_client()
-    finder = get_crypto_ticker_finder(100)
-    sum0 = crypto_daily_discussion_summarization(reddit, 2024, 12, 20, finder, fin_bert)
+    pass
+
+from src.sentiment_models import get_finbert
+fin_bert = get_finbert()
+reddit = get_reddit_client()
+finder = get_crypto_ticker_finder(100)
+sub = get_todays_crypto_daily_discussion_submission(reddit)
+
+
+
+
+
+
+
+
