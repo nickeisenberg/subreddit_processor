@@ -127,7 +127,7 @@ def crypto_daily_discussion_summarization(
         return_comments=return_comments
     )
 
-    if add_comments_to_database:
+    if add_comments_to_database and root is not None:
         write_submission_comments_to_txt(
             comments=summary_and_comments[1],
             root=root,
@@ -136,7 +136,7 @@ def crypto_daily_discussion_summarization(
             overwrite=False
         )
 
-    if add_summary_to_database:
+    if add_summary_to_database and root is not None:
         write_submission_summary_to_csv(
             summary=summary_and_comments[0],
             root=root,

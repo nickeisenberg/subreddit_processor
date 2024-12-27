@@ -1,5 +1,4 @@
 import datetime as dt
-import os
 import pandas as pd
 from typing import Callable, Iterable
 from praw.models import MoreComments
@@ -15,11 +14,13 @@ except:
     )
 
 
-def submission_sentiment_summarization(submission: Submission,
-                                       comment_preprocesser: Callable[[str], str],
-                                       sentiment_model: Callable[[str], tuple[str, float]],
-                                       ticker_finder: Callable[[str], Iterable[str]],
-                                       return_comments: bool = False):
+def submission_sentiment_summarization(
+        submission: Submission,
+        comment_preprocesser: Callable[[str], str],
+        sentiment_model: Callable[[str], tuple[str, float]],
+        ticker_finder: Callable[[str], Iterable[str]],
+        return_comments: bool = False):
+
     submission_id = submission.id
 
     date = dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
@@ -71,3 +72,6 @@ def submission_sentiment_summarization(submission: Submission,
 
     else:
         return summarization, comments
+
+
+
