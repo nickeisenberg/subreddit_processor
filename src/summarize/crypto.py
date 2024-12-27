@@ -32,8 +32,11 @@ except:
 
 from src.summarize.summarize_tools import (
     submission_sentiment_summarization,
+)
+
+from src.database.database import (
     write_submission_summary_to_csv,
-    write_submission_comments_to_txt
+    write_submission_comments_to_txt,
 )
 
 
@@ -103,61 +106,44 @@ def crypto_daily_discussion_summarization(
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 
         root: str | None = None):
-    summary =  submission_sentiment_summarization(
-        submission=get_crypto_daily_discussion_submission(
-            reddit, year, month, day
-        ),
+
+    if add_comments_to_database and not return_comments:
+        raise Exception(
+            "add_comments_to_database is set to True but return_comments is set to False"
+        )
+
+    if (add_comments_to_database or add_summary_to_database) and not root:
+        raise Exception("root must be set")
+
+    submission = get_crypto_daily_discussion_submission(
+        reddit, year, month, day
+    )
+
+    summary_and_comments =  submission_sentiment_summarization(
+        submission=submission,
         comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
         return_comments=return_comments
     )
 
-    if add_to_database:
-        pass
-
-    return summary
-
-
-def add_crypto_daily_discussion_summary_to_database(
-        root: str, reddit: Reddit, date: str | dt.datetime, 
-        sentiment_model: Callable, ticker_finder: Callable[[str], list[str]], 
-        overwrite: bool = False):
-    """if date is a string then it is of the form YEAR-MONTH-DAY, ie, 2024-1-1"""
-    if isinstance(date, str):
-        date = dt.datetime.strptime(date, "%Y-%m-%d")
-
-    try:
-        summarization, comments = crypto_daily_discussion_summarization(
-            reddit=reddit, year=date.year, month=date.month, day=date.day, 
-            ticker_finder=ticker_finder, sentiment_model=sentiment_model, 
-            return_comments=True
-        )
-        submission_id = summarization["submission_id"].values[0]
-    except:
-        raise Exception("date not found")
-    
-    try:
-        write_submission_summary_to_csv(
-            summary=summarization, 
-            root=root, 
-            submission_id=submission_id, 
-            date=date,
-            overwrite=overwrite
-        )
-    except Exception as e:
-        raise e
-
-    try:
+    if add_comments_to_database:
         write_submission_comments_to_txt(
-            comments=comments, 
-            root=root, 
-            submission_id=submission_id, 
-            date=date,
-            overwrite=overwrite
+            comments=summary_and_comments[1],
+            root=root,
+            submission_id=int(submission.id),
+            date=dt.datetime(year=year, month=month, day=day),
+            overwrite=False
         )
-    except Exception as e:
-        raise e
+
+    if add_summary_to_database:
+        write_submission_summary_to_csv(
+            summary=summary_and_comments[0],
+            root=root,
+            overwrite=False
+        )
+    
+    return summary_and_comments 
 
 
 def get_unaccounted_for_crypto_daily_dates(root: str, skip_today: bool = True):
@@ -197,8 +183,8 @@ def update_crypto_datebase_dailies(root: str, reddit: Reddit,
 if __name__ == "__main__":
     pass
 
-from src.sentiment_models import get_finbert
-fin_bert = get_finbert()
-reddit = get_reddit_client()
-finder = get_crypto_ticker_finder(100)
-sub = get_todays_crypto_daily_discussion_submission(reddit)
+    from src.sentiment_models.models import get_finbert
+    fin_bert = get_finbert()
+    reddit = get_reddit_client()
+    finder = get_crypto_ticker_finder(100)
+    sub = get_todays_crypto_daily_discussion_submission(reddit)
