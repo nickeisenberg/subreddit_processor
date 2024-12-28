@@ -14,6 +14,10 @@ except:
     )
 
 
+def get_date_from_submission(submission: Submission):
+    return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
+
+
 def submission_sentiment_summarization(
         submission: Submission,
         comment_preprocesser: Callable[[str], str],
@@ -23,7 +27,7 @@ def submission_sentiment_summarization(
 
     submission_id = submission.id
 
-    date = dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
+    date = get_date_from_submission(submission)
 
     summarization_columns=pd.Series(
         [
@@ -44,7 +48,7 @@ def submission_sentiment_summarization(
             praw_comment.body
         )
 
-        if len(comment) > 512:
+        if not comment:
             continue
 
         if return_comments:
@@ -72,6 +76,3 @@ def submission_sentiment_summarization(
 
     else:
         return summarization, comments
-
-
-

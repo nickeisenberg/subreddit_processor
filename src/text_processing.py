@@ -11,8 +11,15 @@ def remove_all_non_asci(text: str):
     return text
 
 
-def lower_text_and_remove_all_non_asci(text: str):
+def lower_text_and_remove_all_non_asci(text):
     return remove_all_non_asci(text.lower().strip())
+
+
+def default_text_processor(max_len: int = 512):
+    def _(text: str):
+        processed_text = lower_text_and_remove_all_non_asci(text)
+        return processed_text if len(processed_text) <= max_len else ""
+    return _
 
 
 def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 
@@ -25,3 +32,8 @@ def get_tickers_from_string(sentence: str, symbol_to_name_map: dict,
         elif word in name_to_symbol_map:
             x.append(name_to_symbol_map[word])
     return list(set(x))
+
+
+if __name__ == "__main__":
+    processor = default_text_processor(10)
+    processor("here is a wall of text")

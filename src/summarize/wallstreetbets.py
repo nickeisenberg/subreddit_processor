@@ -149,7 +149,7 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
 
 if __name__ == "__main__":
     from src.praw_tools import get_reddit_client 
-    from src.sentiment_models import get_finbert
+    from src.sentiment_models.models import get_finbert
     
     reddit = get_reddit_client()
     
