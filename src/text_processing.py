@@ -16,9 +16,10 @@ def lower_text_and_remove_all_non_asci(text):
     return remove_all_non_asci(text.lower().strip())
 
 
-def default_praw_comment_processer(max_len: int = 512):
-    def _(commment: Comment):
-        processed_text = lower_text_and_remove_all_non_asci(commment.body)
+def default_comment_processer(max_len: int = 512):
+    def _(comment: str | Comment):
+        comment_txt = comment.body if isinstance(comment, Comment) else comment
+        processed_text = lower_text_and_remove_all_non_asci(comment_txt)
         return processed_text if len(processed_text) <= max_len else ""
     return _
 
