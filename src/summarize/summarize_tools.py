@@ -29,7 +29,7 @@ def submission_sentiment_summarization(
 
     date = get_date_from_submission(submission)
 
-    summarization_columns=pd.Series(
+    summarization_columns = pd.Series(
         [
             "date", "submission_id", "comment_id", "sentiment", 
             "sentiment_score", "tickers_mentioned"
@@ -44,19 +44,19 @@ def submission_sentiment_summarization(
 
         comment_id = praw_comment.id
 
-        comment = praw_comment_preprocesser(
+        processed_comment = praw_comment_preprocesser(
             praw_comment.body
         )
 
-        if not comment:
+        if not processed_comment:
             continue
 
         if return_comments:
-            comments.append([comment_id, comment])
+            comments.append([comment_id, processed_comment])
 
-        sentiment_label, sentiment_score = sentiment_model(comment)
+        sentiment_label, sentiment_score = sentiment_model(processed_comment)
 
-        tickers = ticker_finder(comment)
+        tickers = ticker_finder(processed_comment)
         tickers = ", ".join(tickers) if tickers else "N/A"
 
         comment_summarizations.append(
