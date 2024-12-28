@@ -20,7 +20,7 @@ def get_date_from_submission(submission: Submission):
 
 def submission_sentiment_summarization(
         submission: Submission,
-        comment_preprocesser: Callable[[str], str],
+        praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[str, float]],
         ticker_finder: Callable[[str], Iterable[str]],
         return_comments: bool = False):
@@ -44,7 +44,7 @@ def submission_sentiment_summarization(
 
         comment_id = praw_comment.id
 
-        comment = comment_preprocesser(
+        comment = praw_comment_preprocesser(
             praw_comment.body
         )
 

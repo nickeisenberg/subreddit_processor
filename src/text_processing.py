@@ -1,5 +1,6 @@
 import re
 import string
+from praw.reddit import Comment
 
 
 def remove_all_non_asci(text: str):
@@ -15,9 +16,9 @@ def lower_text_and_remove_all_non_asci(text):
     return remove_all_non_asci(text.lower().strip())
 
 
-def default_text_processor(max_len: int = 512):
-    def _(text: str):
-        processed_text = lower_text_and_remove_all_non_asci(text)
+def default_praw_comment_processer(max_len: int = 512):
+    def _(commment: Comment):
+        processed_text = lower_text_and_remove_all_non_asci(commment.body)
         return processed_text if len(processed_text) <= max_len else ""
     return _
 
@@ -35,5 +36,4 @@ def get_tickers_from_string(sentence: str, symbol_to_name_map: dict,
 
 
 if __name__ == "__main__":
-    processor = default_text_processor(10)
-    processor("here is a wall of text")
+    pass
