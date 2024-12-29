@@ -148,21 +148,21 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
 if __name__ == "__main__":
     pass
 
-from src.praw_tools import get_reddit_client 
-from src.sentiment_models.models import get_finbert
-
-reddit = get_reddit_client()
-
-path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
-finder = get_ticker_finder(path)
-
-finbert = get_finbert("cuda")
-
-sum, coms = wsb_daily_discussion_summarization(
-    reddit, 
-    2024, 
-    12, 
-    15,
-    finder,
-    finbert,
-)
+    from src.praw_tools import get_reddit_client 
+    from src.sentiment_models.models import get_finbert
+    
+    reddit = get_reddit_client()
+    
+    path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
+    finder = get_ticker_finder(path)
+    
+    finbert = get_finbert("cuda")
+    
+    sum, coms = wsb_daily_discussion_summarization(
+        reddit, 
+        2024, 
+        12, 
+        15,
+        finder,
+        finbert,
+    )

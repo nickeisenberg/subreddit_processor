@@ -192,18 +192,18 @@ def submission_sentiment_summarization(
         summary_row = summary.new_row
         comments_row = comments.new_row
 
+        comments_row.date = date
+        comments_row.submission_id = submission_id
+        comments_row.comment_id = praw_comment.id
+        comments_row.comment = praw_comment.body 
+        comments.add_row(comments_row)
+
         processed_comment = praw_comment_preprocesser(
             praw_comment.body
         )
 
         if not processed_comment:
             continue
-
-        comments_row.date = date
-        comments_row.submission_id = submission_id
-        comments_row.comment_id = praw_comment.id
-        comments_row.comment = processed_comment
-        comments.add_row(comments_row)
 
         summary_row.date = date
         summary_row.submission_id = submission_id
@@ -213,3 +213,47 @@ def submission_sentiment_summarization(
         summary.add_row(summary_row)
 
     return summary.table, comments.table 
+
+
+def table_sentiment_summariztion(
+        table: pd.DataFrame,
+        praw_comment_preprocesser: Callable[[str], str],
+        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        ticker_finder: Callable[[str], Iterable[str]]):
+    table["comment"] = table["comment"].map(praw_comment_preprocesser).map(lambda x: None if x == "" else x)
+    table = table.dropna()
+    table[["sentiment", "sentiment_score"]] = table["comment"].map(sentiment_model).apply(pd.Series)
+    table["tickers_mentioned"] = table["comment"].map(ticker_finder)
+    return table.drop(columns="comment")
+
+if __name__ == "__main__": 
+    from src.sentiment_models.models import get_twitter_roberta_base
+    from src.text_processing import default_comment_processer
+    
+    model = get_twitter_roberta_base()
+    
+    def finder(string: str):
+        ticks = ["gme", "amzn"]
+        return_ticks = []
+        for word in string.split(" "):
+            if word in ticks:
+                return_ticks.append(word)
+        return ", ".join(list(set(return_ticks)))
+    
+    x = pd.DataFrame(
+        {
+            "com_ids": [
+                "qe43", 
+                "asdf", 
+                "34532"
+            ], 
+            "comment": [
+                "GME is the first and amzn sucks", 
+                "hello there", 
+                "this is shitty"
+            ], 
+        }
+    )
+    
+    table_sentiment_summariztion(x, default_comment_processer(512), model, finder)
+    
