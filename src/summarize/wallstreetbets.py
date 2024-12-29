@@ -133,8 +133,7 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
                                        month: int,
                                        day: int, 
                                        ticker_finder: Callable[[str], list[str]],
-                                       sentiment_model: Callable,
-                                       return_comments: bool = False):
+                                       sentiment_model: Callable):
     submission = get_wsb_daily_discussion_submission(
         reddit, year, month, day
     )
@@ -143,29 +142,27 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
         praw_comment_preprocesser=default_comment_processer(),
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
-        return_comments=return_comments
     )
 
 
 if __name__ == "__main__":
     pass
 
-    from src.praw_tools import get_reddit_client 
-    from src.sentiment_models.models import get_finbert
-    
-    reddit = get_reddit_client()
-    
-    path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
-    finder = get_ticker_finder(path)
-    
-    finbert = get_finbert("cuda")
-    
-    sum, coms = wsb_daily_discussion_summarization(
-        reddit, 
-        2024, 
-        12, 
-        15,
-        finder,
-        finbert,
-        True
-    )
+from src.praw_tools import get_reddit_client 
+from src.sentiment_models.models import get_finbert
+
+reddit = get_reddit_client()
+
+path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
+finder = get_ticker_finder(path)
+
+finbert = get_finbert("cuda")
+
+sum, coms = wsb_daily_discussion_summarization(
+    reddit, 
+    2024, 
+    12, 
+    15,
+    finder,
+    finbert,
+)

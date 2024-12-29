@@ -1,6 +1,6 @@
 import datetime as dt
 import pandas as pd
-from typing import Callable, Iterable, Iterator, Literal
+from typing import Callable, Iterable, Literal
 from praw.models import MoreComments
 from praw.reddit import Submission
 
@@ -14,7 +14,7 @@ except:
     )
 
 
-class SummaryRow:
+class SentimentRow:
     def __init__(self):
         self._row = {}
     
@@ -87,24 +87,86 @@ class SummaryRow:
         self._tickers_mentioned = tickers_str
 
 
-class Summary:
+class Sentiment:
     def __init__(self):
         self.rows: list[pd.DataFrame] = []
     
     @property
     def new_row(self):
-        return SummaryRow()
+        return SentimentRow()
 
-    def add_row(self, row: SummaryRow):
+    def add_row(self, row: SentimentRow):
         self.rows.append(row.row)
     
     @property
-    def summary(self):
+    def table(self):
         return pd.concat(self.rows)
 
 
-class Database:
-    pass
+class CommentsRow:
+    def __init__(self):
+        self._row = {}
+    
+        self._date = None
+        self._submission_id = None
+        self._comment_id = None
+        self._comment = None
+    
+    @property
+    def row(self):
+        return pd.DataFrame(self._row, index=pd.Series([0]))
+
+    @property
+    def date(self):
+        return self._date
+
+    @date.setter
+    def date(self, date: str):
+        self._row["date"] = date
+        self._date = date
+
+    @property
+    def submission_id(self):
+        return self._submission_id
+
+    @submission_id.setter
+    def submission_id(self, submission_id: str):
+        self._row["submission_id"] = submission_id
+        self._submission_id = submission_id
+
+    @property
+    def comment_id(self):
+        return self._comment_id
+
+    @comment_id.setter
+    def comment_id(self, comment_id: str):
+        self._row["comment_id"] = comment_id
+        self._comment_id = comment_id
+
+    @property
+    def comment(self):
+        return self._comment
+
+    @comment.setter
+    def comment(self, comment: str):
+        self._row["comment"] = comment
+        self._comment = comment
+
+
+class Comments:
+    def __init__(self):
+        self.rows: list[pd.DataFrame] = []
+    
+    @property
+    def new_row(self):
+        return CommentsRow()
+
+    def add_row(self, row: CommentsRow):
+        self.rows.append(row.row)
+    
+    @property
+    def table(self):
+        return pd.concat(self.rows)
 
 
 def get_date_from_submission(submission: Submission):
@@ -115,24 +177,20 @@ def submission_sentiment_summarization(
         submission: Submission,
         praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
-        ticker_finder: Callable[[str], Iterable[str]],
-        return_comments: bool = False):
+        ticker_finder: Callable[[str], Iterable[str]]):
     
-    summary = Summary()
+    summary = Sentiment()
+    comments = Comments()
 
     submission_id = submission.id
     date = get_date_from_submission(submission)
 
-    comments = []
     for praw_comment in get_comments_from_submission(submission):
         if isinstance(praw_comment, MoreComments):
             continue
 
-        row = summary.new_row
-
-        row.date = date
-        row.submission_id = submission_id
-        row.comment_id = praw_comment.id
+        summary_row = summary.new_row
+        comments_row = comments.new_row
 
         processed_comment = praw_comment_preprocesser(
             praw_comment.body
@@ -141,19 +199,17 @@ def submission_sentiment_summarization(
         if not processed_comment:
             continue
 
-        if return_comments:
-            comments.append([row.comment_id, processed_comment])
+        comments_row.date = date
+        comments_row.submission_id = submission_id
+        comments_row.comment_id = praw_comment.id
+        comments_row.comment = processed_comment
+        comments.add_row(comments_row)
 
-        row.sentiment, row.sentiment_score = sentiment_model(processed_comment)
+        summary_row.date = date
+        summary_row.submission_id = submission_id
+        summary_row.comment_id = praw_comment.id
+        summary_row.sentiment, summary_row.sentiment_score = sentiment_model(processed_comment)
+        summary_row.tickers_mentioned = ticker_finder(processed_comment)
+        summary.add_row(summary_row)
 
-        row.tickers_mentioned = ticker_finder(processed_comment)
-
-        summary.add_row(row)
-
-    summarization = summary.summary
-    
-    if not return_comments:
-        return summarization
-
-    else:
-        return summarization, comments
+    return summary.table, comments.table 
