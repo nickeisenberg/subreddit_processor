@@ -1,17 +1,17 @@
 from src.sentiment_models.utils import huggingface_sentiment_analysis_pipeline
-
-from typing import Callable
+from typing import Callable, Literal
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
-def get_finbert(device="cpu") -> Callable[[str], tuple[str, float]]:
+
+def get_finbert(device="cpu"):
     """
     returns 'ProsusAI/finbert'
     """
     return huggingface_sentiment_analysis_pipeline("ProsusAI/finbert", device)
 
 
-def get_twitter_roberta_base(device="cpu") -> Callable[[str], tuple[str, float]]:
+def get_twitter_roberta_base(device="cpu"):
     """
     returns 'cardiffnlp/twitter-roberta-base-sentiment-latest'
     """
@@ -20,7 +20,7 @@ def get_twitter_roberta_base(device="cpu") -> Callable[[str], tuple[str, float]]
     )
 
 
-def get_fin_distilroberta_base(device="cpu") -> Callable[[str], tuple[str, float]]:
+def get_fin_distilroberta_base(device="cpu"):
     """
     returns 'mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis'
     """
@@ -31,7 +31,7 @@ def get_fin_distilroberta_base(device="cpu") -> Callable[[str], tuple[str, float
 
 
 def get_vader(neg_cutoff: float = -.1, 
-              pos_cutoff: float = .1) -> Callable[[str], tuple[str, float]]:
+              pos_cutoff: float = .1) -> Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]]:
     sid_obj = SentimentIntensityAnalyzer()
     def vader_(sentence: str):
         sentiment_dict = sid_obj.polarity_scores(sentence)

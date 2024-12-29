@@ -226,6 +226,7 @@ def table_sentiment_summariztion(
     table["tickers_mentioned"] = table["comment"].map(ticker_finder)
     return table.drop(columns="comment")
 
+
 if __name__ == "__main__": 
     from src.sentiment_models.models import get_twitter_roberta_base
     from src.text_processing import default_comment_processer
@@ -256,4 +257,3 @@ if __name__ == "__main__":
     )
     
     table_sentiment_summariztion(x, default_comment_processer(512), model, finder)
-    
