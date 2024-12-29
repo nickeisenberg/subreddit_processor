@@ -20,4 +20,3 @@ for idx in range(len(lines)):
         print(comment)
         print(senti)
         print(tickers)
-

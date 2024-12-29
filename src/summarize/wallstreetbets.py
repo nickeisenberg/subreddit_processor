@@ -8,7 +8,7 @@ from praw.models import MoreComments
 from praw.reddit import Submission
 
 from src.summarize.summarize_tools import submission_sentiment_summarization
-from src.text_processing import lower_text_and_remove_all_non_asci
+from src.text_processing import default_comment_processer 
 
 try:
     from ..praw_tools import (
@@ -140,7 +140,7 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
     )
     return submission_sentiment_summarization(
         submission=submission,
-        comment_preprocesser=lower_text_and_remove_all_non_asci,
+        praw_comment_preprocesser=default_comment_processer(),
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
         return_comments=return_comments
@@ -148,6 +148,8 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
 
 
 if __name__ == "__main__":
+    pass
+
     from src.praw_tools import get_reddit_client 
     from src.sentiment_models.models import get_finbert
     
