@@ -32,6 +32,7 @@ except:
 
 from src.summarize.summarize_tools import (
     submission_sentiment_summarization,
+    table_sentiment_summariztion
 )
 
 from src.database.database import (
@@ -182,9 +183,12 @@ def update_crypto_datebase_dailies(root: str, reddit: Reddit,
 
 if __name__ == "__main__":
     pass
-
-    from src.sentiment_models.models import get_finbert
-    fin_bert = get_finbert()
+    from src.sentiment_models.models import get_twitter_roberta_base
+    from src.text_processing import default_comment_processer
+    
+    model = get_twitter_roberta_base("cuda")
     reddit = get_reddit_client()
     finder = get_crypto_ticker_finder(100)
     sub = get_todays_crypto_daily_discussion_submission(reddit)
+    path = "/home/nicholas/gitrepos/ticker_sentiment/data/crypto/daily_discussions/individual/2019-03-09_ayxcwl.csv"
+    sum = table_sentiment_summariztion(path, default_comment_processer(), model, finder)

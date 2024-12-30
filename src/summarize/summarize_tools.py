@@ -216,10 +216,14 @@ def submission_sentiment_summarization(
 
 
 def table_sentiment_summariztion(
-        table: pd.DataFrame,
+        table: str | pd.DataFrame,
         praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
         ticker_finder: Callable[[str], Iterable[str]]):
+
+    if isinstance(table, str):
+        table = pd.read_csv(table, index_col=0)
+
     table["comment"] = table["comment"].map(praw_comment_preprocesser).map(lambda x: None if x == "" else x)
     table = table.dropna()
     table[["sentiment", "sentiment_score"]] = table["comment"].map(sentiment_model).apply(pd.Series)
