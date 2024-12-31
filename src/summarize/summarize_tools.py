@@ -14,13 +14,13 @@ def get_date_from_submission(submission: Submission):
     return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
 
 
-def submission_sentiment_summarization(
+def get_sentiment_and_comments_from_submission(
         submission: Submission,
         praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
         ticker_finder: Callable[[str], Iterable[str]]):
     
-    summary = Sentiment()
+    sentiment = Sentiment()
     comments = Comments()
 
     submission_id = submission.id
@@ -30,11 +30,10 @@ def submission_sentiment_summarization(
         if isinstance(praw_comment, MoreComments):
             continue
 
-        comments_row = comments.new_row
-        comments_row.property_setter(
-            date=date,
+        comments_row = comments.new_row(
             submission_id=submission_id,
             comment_id=praw_comment.id,
+            date=date,
             comment=praw_comment.body 
         )
         comments.add_row(comments_row)
@@ -46,19 +45,18 @@ def submission_sentiment_summarization(
         if not processed_comment:
             continue
 
-        summary_row = summary.new_row
-        sentiment, sentiment_score = sentiment_model(processed_comment)
-        summary_row.propert_setter(
+        sentiment_label, sentiment_score = sentiment_model(processed_comment)
+        sentiment_row = sentiment.new_row(
             submission_id=submission_id,
             comment_id=praw_comment.id,
             date=date,
-            sentiment=sentiment,
+            sentiment=sentiment_label,
             sentiment_score=sentiment_score,
             tickers_mentioned=ticker_finder(processed_comment)
         )
-        summary.add_row(summary_row)
+        sentiment.add_row(sentiment_row)
 
-    return summary, comments
+    return sentiment, comments
 
 
 def table_sentiment_summariztion(
@@ -89,7 +87,7 @@ def submission_sentiment_summarization_writer(
     if (add_comments_to_database or add_summary_to_database) and not root:
         raise Exception("root must be set")
 
-    summary, comments =  submission_sentiment_summarization(
+    summary, comments =  get_sentiment_and_comments_from_submission(
         submission=submission,
         praw_comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,

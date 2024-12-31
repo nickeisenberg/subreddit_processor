@@ -25,14 +25,16 @@ def common_write(table: pd.DataFrame, root: str, overwrite: bool = False):
 
 
 class SentimentRow:
-    def __init__(self):
-        self._submission_id = None
-        self._comment_id = None
-        self._date = None
-        self._sentiment = None
-        self._sentiment_score = None
-        self._tickers_mentioned = None
-
+    def __init__(self, submission_id: str, comment_id: str, date: str, 
+                 sentiment: Literal["positive", "negative", "neutral"], 
+                 sentiment_score: float, 
+                 tickers_mentioned: Iterable[str]):
+        self.submission_id = submission_id
+        self.comment_id = comment_id
+        self.date = date
+        self.sentiment = sentiment
+        self.sentiment_score = sentiment_score
+        self.tickers_mentioned = ", ".join(tickers_mentioned) if tickers_mentioned else "N/A"
     
     @property
     def row(self):
@@ -49,68 +51,6 @@ class SentimentRow:
             "tickers_mentioned": self.tickers_mentioned 
         }
 
-    def propert_setter(self, submission_id: str, comment_id: str, date: str, 
-                       sentiment: Literal["positive", "negative", "neutral"], 
-                       sentiment_score: float, 
-                       tickers_mentioned: Iterable[str]):
-        self.submission_id = submission_id
-        self.comment_id = comment_id
-        self.date = date
-        self.sentiment = sentiment
-        self.sentiment_score = sentiment_score
-        self.tickers_mentioned = tickers_mentioned
-
-    @property
-    def date(self):
-        return self._date
-
-    @date.setter
-    def date(self, date: str):
-        self._date = date
-
-    @property
-    def submission_id(self):
-        return self._submission_id
-
-    @submission_id.setter
-    def submission_id(self, submission_id: str):
-        self._submission_id = submission_id
-
-    @property
-    def comment_id(self):
-        return self._comment_id
-
-    @comment_id.setter
-    def comment_id(self, comment_id: str):
-        self._comment_id = comment_id
-
-    @property
-    def sentiment(self):
-        return self._sentiment
-
-    @sentiment.setter
-    def sentiment(self, sentiment: Literal["positive", "neutral", "negative"]):
-        if not sentiment in ["positive", "neutral", "negative"]:
-            raise Exception("sentiment must be 'positive', 'neutral' or 'negative'")
-        self._sentiment = sentiment
-
-    @property
-    def sentiment_score(self):
-        return self._sentiment_score
-
-    @sentiment_score.setter
-    def sentiment_score(self, sentiment_score: float):
-        self._sentiment_score = sentiment_score
-
-    @property
-    def tickers_mentioned(self):
-        return self._tickers_mentioned
-
-    @tickers_mentioned.setter
-    def tickers_mentioned(self, tickers: Iterable[str]):
-        tickers_str = ", ".join(tickers) if tickers else "N/A"
-        self._tickers_mentioned = tickers_str
-
 
 class Sentiment:
     def __init__(self):
@@ -119,7 +59,7 @@ class Sentiment:
     
     @property
     def new_row(self):
-        return SentimentRow()
+        return SentimentRow
 
     def add_row(self, row: SentimentRow):
         self.rows.append(row.row)
@@ -137,11 +77,12 @@ class Sentiment:
 
 
 class CommentsRow:
-    def __init__(self):
-        self._date = None
-        self._submission_id = None
-        self._comment_id = None
-        self._comment = None
+    def __init__(self, date: str, submission_id: str, comment_id: str,
+                 comment: str):
+        self.date = date 
+        self.submission_id = submission_id 
+        self.comment_id = comment_id
+        self.comment = comment
     
     @property
     def row(self):
@@ -156,46 +97,6 @@ class CommentsRow:
             "comment": self.comment 
         }
 
-    def property_setter(self, date: str, submission_id: str, comment_id: str, 
-                        comment: str):
-        self.date = date 
-        self.submission_id = submission_id 
-        self.comment_id = comment_id 
-        self.comment = comment 
-
-
-    @property
-    def date(self):
-        return self._date
-
-    @date.setter
-    def date(self, date: str):
-        self._date = date
-
-    @property
-    def submission_id(self):
-        return self._submission_id
-
-    @submission_id.setter
-    def submission_id(self, submission_id: str):
-        self._submission_id = submission_id
-
-    @property
-    def comment_id(self):
-        return self._comment_id
-
-    @comment_id.setter
-    def comment_id(self, comment_id: str):
-        self._comment_id = comment_id
-
-    @property
-    def comment(self):
-        return self._comment
-
-    @comment.setter
-    def comment(self, comment: str):
-        self._comment = comment
-
 
 class Comments:
     def __init__(self):
@@ -204,7 +105,7 @@ class Comments:
     
     @property
     def new_row(self):
-        return CommentsRow()
+        return CommentsRow
 
     def add_row(self, row: CommentsRow):
         self.rows.append(row.row)
