@@ -1,4 +1,4 @@
-from typing import Any, Callable, Literal, cast
+from typing import Any, Literal, cast
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,

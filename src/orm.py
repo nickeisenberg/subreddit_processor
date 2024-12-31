@@ -1,5 +1,15 @@
+import os
 import pandas as pd
 from typing import Iterable, Literal
+
+
+def get_submission_id_and_date_from_summary(summary: pd.DataFrame):
+    columns = summary.columns
+    if not "submission_id" in columns and not "date" in columns:
+        raise Exception("submission_id and date are not in the columns of summary")
+    submission_id = summary["submission_id"].values[0]
+    date_str = summary["date"].values[0]
+    return submission_id, date_str
 
 
 class SentimentRow:
@@ -82,6 +92,7 @@ class SentimentRow:
 class Sentiment:
     def __init__(self):
         self.rows: list[pd.DataFrame] = []
+        self._table = pd.DataFrame(dtype=object)
     
     @property
     def new_row(self):
@@ -92,13 +103,26 @@ class Sentiment:
     
     @property
     def table(self):
-        return pd.concat(self.rows).reset_index(drop=True)
+        if len(self.rows) == len(self._table):
+            return self._table
+        else:
+            self._table = pd.concat(self.rows).reset_index(drop=True)
+            return self._table
+
+    def write(self, root: str, overwrite: bool = False):
+        columns = self.table.columns
+        if not "submission_id" in columns and not "date" in columns:
+            raise Exception("submission_id and date are not in the columns of summary")
+        submission_id = self.table["submission_id"].values[0]
+        date_str = self.table["date"].values[0]
+        save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
+        if not overwrite and os.path.isfile(save_csv_to):
+            raise Exception(f"{save_csv_to} exists")
+        self.table.to_csv(save_csv_to)
 
 
 class CommentsRow:
     def __init__(self):
-        self._row = {}
-    
         self._date = None
         self._submission_id = None
         self._comment_id = None
@@ -106,7 +130,16 @@ class CommentsRow:
     
     @property
     def row(self):
-        return pd.DataFrame(self._row, index=pd.Series([0]))
+        return pd.DataFrame(self.row_dict, index=pd.Series([0]))
+
+    @property
+    def row_dict(self):
+        return {
+            "submission_id": self.submission_id,
+            "comment_id": self.comment_id,
+            "date": self.date,
+            "comment": self.comment 
+        }
 
     @property
     def date(self):
@@ -114,7 +147,6 @@ class CommentsRow:
 
     @date.setter
     def date(self, date: str):
-        self._row["date"] = date
         self._date = date
 
     @property
@@ -123,7 +155,6 @@ class CommentsRow:
 
     @submission_id.setter
     def submission_id(self, submission_id: str):
-        self._row["submission_id"] = submission_id
         self._submission_id = submission_id
 
     @property
@@ -132,7 +163,6 @@ class CommentsRow:
 
     @comment_id.setter
     def comment_id(self, comment_id: str):
-        self._row["comment_id"] = comment_id
         self._comment_id = comment_id
 
     @property
@@ -141,13 +171,13 @@ class CommentsRow:
 
     @comment.setter
     def comment(self, comment: str):
-        self._row["comment"] = comment
         self._comment = comment
 
 
 class Comments:
     def __init__(self):
         self.rows: list[pd.DataFrame] = []
+        self._table = pd.DataFrame(dtype=object)
     
     @property
     def new_row(self):
@@ -158,4 +188,19 @@ class Comments:
     
     @property
     def table(self):
-        return pd.concat(self.rows).reset_index(drop=True)
+        if len(self.rows) == len(self._table):
+            return self._table
+        else:
+            self._table = pd.concat(self.rows).reset_index(drop=True)
+            return self._table
+
+    def write(self, root: str, overwrite: bool = False):
+        columns = self.table.columns
+        if not "submission_id" in columns and not "date" in columns:
+            raise Exception("submission_id and date are not in the columns of summary")
+        submission_id = self.table["submission_id"].values[0]
+        date_str = self.table["date"].values[0]
+        save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
+        if not overwrite and os.path.isfile(save_csv_to):
+            raise Exception(f"{save_csv_to} exists")
+        self.table.to_csv(save_csv_to)

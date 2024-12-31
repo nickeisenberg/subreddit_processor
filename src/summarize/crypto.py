@@ -1,44 +1,36 @@
 import os
 import datetime as dt
 from tqdm import tqdm
-from typing import Callable
+from typing import Callable, Literal
 from praw import Reddit
 from praw.reddit import Submission
 from pycoingecko import CoinGeckoAPI
 
-try:
-    from ..praw_tools import (
-        get_submission_list_by_search,
-        get_comments_from_submission,
-        get_reddit_client
-    )
-except:
-    from src.praw_tools import (
-        get_submission_list_by_search,
-        get_comments_from_submission,
-        get_reddit_client
-    )
+from src.praw_tools import (
+    get_submission_list_by_search,
+    get_reddit_client
+)
 
-try:
-    from ..text_processing import (
-        lower_text_and_remove_all_non_asci,
-        get_tickers_from_string,
-    )
-except:
-    from src.text_processing import (
-        lower_text_and_remove_all_non_asci,
-        get_tickers_from_string,
-    )
+from src.text_processing import (
+    lower_text_and_remove_all_non_asci
+)
 
 from src.summarize.summarize_tools import (
     submission_sentiment_summarization,
     table_sentiment_summariztion
 )
 
-from src.database.database import (
-    write_submission_summary_to_csv,
-    write_submission_comments_to_txt,
-)
+
+def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 
+                            name_to_symbol_map: dict) -> list[str]:
+    x = []
+    for word in lower_text_and_remove_all_non_asci(sentence).split():
+        word = word.lower()
+        if word in symbol_to_name_map:
+            x.append(symbol_to_name_map[word])
+        elif word in name_to_symbol_map:
+            x.append(name_to_symbol_map[word])
+    return list(set(x))
 
 
 def make_ticker_and_name_map(top: int):
@@ -101,7 +93,7 @@ def crypto_daily_discussion_summarization(
         month: int,
         day: int, 
         comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[str, float]],
+        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
         ticker_finder: Callable[[str], list[str]],
         return_comments: bool = False, 
         add_summary_to_database: bool = False, 
@@ -120,31 +112,20 @@ def crypto_daily_discussion_summarization(
         reddit, year, month, day
     )
 
-    summary_and_comments =  submission_sentiment_summarization(
+    summary, comments =  submission_sentiment_summarization(
         submission=submission,
-        comment_preprocesser=comment_preprocesser,
+        praw_comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
-        return_comments=return_comments
     )
 
     if add_comments_to_database and root is not None:
-        write_submission_comments_to_txt(
-            comments=summary_and_comments[1],
-            root=root,
-            submission_id=int(submission.id),
-            date=dt.datetime(year=year, month=month, day=day),
-            overwrite=False
-        )
+        summary.write(root)
 
     if add_summary_to_database and root is not None:
-        write_submission_summary_to_csv(
-            summary=summary_and_comments[0],
-            root=root,
-            overwrite=False
-        )
+        comments.write(root)
     
-    return summary_and_comments 
+    return summary, comments 
 
 
 def get_unaccounted_for_crypto_daily_dates(root: str, skip_today: bool = True):

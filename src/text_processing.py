@@ -24,17 +24,5 @@ def default_comment_processer(max_len: int = 512):
     return _
 
 
-def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 
-                            name_to_symbol_map: dict) -> list[str]:
-    x = []
-    for word in lower_text_and_remove_all_non_asci(sentence).split():
-        word = word.lower()
-        if word in symbol_to_name_map:
-            x.append(symbol_to_name_map[word])
-        elif word in name_to_symbol_map:
-            x.append(name_to_symbol_map[word])
-    return list(set(x))
-
-
 if __name__ == "__main__":
     pass

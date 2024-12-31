@@ -53,7 +53,7 @@ def submission_sentiment_summarization(
         summary_row.tickers_mentioned = ticker_finder(processed_comment)
         summary.add_row(summary_row)
 
-    return summary.table, comments.table 
+    return summary, comments
 
 
 def table_sentiment_summariztion(

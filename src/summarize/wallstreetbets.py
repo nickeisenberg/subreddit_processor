@@ -1,40 +1,20 @@
-import os
 import datetime as dt
-from tqdm import tqdm
 import pandas as pd
 from typing import Callable
 from praw import Reddit
-from praw.models import MoreComments
 from praw.reddit import Submission
 
 from src.summarize.summarize_tools import submission_sentiment_summarization
 from src.text_processing import default_comment_processer 
 
-try:
-    from ..praw_tools import (
-        get_submission_list_by_search,
-        get_comments_from_submission,
-        get_reddit_client
-    )
-except:
-    from src.praw_tools import (
-        get_submission_list_by_search,
-        get_comments_from_submission,
-        get_reddit_client
-    )
+from src.praw_tools import (
+    get_submission_list_by_search,
+    get_reddit_client
+)
 
-try:
-    from ..text_processing import (
-        lower_text_and_remove_all_non_asci,
-        get_tickers_from_string,
-        get_ticker_and_name_map
-    )
-except:
-    from src.text_processing import (
-        lower_text_and_remove_all_non_asci,
-        get_tickers_from_string,
-        get_ticker_and_name_map
-    )
+from src.text_processing import (
+    lower_text_and_remove_all_non_asci,
+)
 
 
 def get_tickers(path) -> list[str]:
