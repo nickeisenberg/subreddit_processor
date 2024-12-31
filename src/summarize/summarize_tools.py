@@ -72,6 +72,40 @@ def table_sentiment_summariztion(
     return table.drop(columns="comment")
 
 
+def submission_sentiment_summarization_writer(
+        submission: Submission,
+        comment_preprocesser: Callable[[str], str],
+        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        ticker_finder: Callable[[str], list[str]],
+        return_comments: bool = False, 
+        add_summary_to_database: bool = False, 
+        add_comments_to_database: bool = False, 
+        root: str | None = None):
+
+    if add_comments_to_database and not return_comments:
+        raise Exception(
+            "add_comments_to_database is set to True but return_comments is set to False"
+        )
+
+    if (add_comments_to_database or add_summary_to_database) and not root:
+        raise Exception("root must be set")
+
+    summary, comments =  submission_sentiment_summarization(
+        submission=submission,
+        praw_comment_preprocesser=comment_preprocesser,
+        sentiment_model=sentiment_model,
+        ticker_finder=ticker_finder,
+    )
+
+    if add_comments_to_database and root is not None:
+        comments.write(root)
+
+    if add_summary_to_database and root is not None:
+        summary.write(root)
+    
+    return summary, comments 
+
+
 if __name__ == "__main__": 
     from src.sentiment_models.models import get_twitter_roberta_base
     from src.text_processing import default_comment_processer

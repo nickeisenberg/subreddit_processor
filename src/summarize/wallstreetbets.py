@@ -4,14 +4,11 @@ from typing import Callable
 from praw import Reddit
 from praw.reddit import Submission
 
-from src.summarize.summarize_tools import submission_sentiment_summarization
-from src.text_processing import default_comment_processer 
-
+from src.summarize.summarize_tools import submission_sentiment_summarization_writer
 from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client
 )
-
 from src.text_processing import (
     lower_text_and_remove_all_non_asci,
 )
@@ -112,17 +109,30 @@ def wsb_daily_discussion_summarization(reddit: Reddit,
                                        year: int,
                                        month: int,
                                        day: int, 
+                                       comment_preprocesser: Callable[[str], str],
+                                       sentiment_model: Callable,
                                        ticker_finder: Callable[[str], list[str]],
-                                       sentiment_model: Callable):
+                                       return_comments: bool = False, 
+                                       add_summary_to_database: bool = False, 
+                                       add_comments_to_database: bool = False, 
+                                       root: str | None = None):
+
     submission = get_wsb_daily_discussion_submission(
         reddit, year, month, day
     )
-    return submission_sentiment_summarization(
+
+    summary, comments =  submission_sentiment_summarization_writer(
         submission=submission,
-        praw_comment_preprocesser=default_comment_processer(),
+        comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
+        return_comments=return_comments, 
+        add_summary_to_database=add_summary_to_database, 
+        add_comments_to_database=add_comments_to_database, 
+        root=root
     )
+    
+    return summary, comments 
 
 
 if __name__ == "__main__":

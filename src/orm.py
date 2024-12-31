@@ -12,6 +12,18 @@ def get_submission_id_and_date_from_summary(summary: pd.DataFrame):
     return submission_id, date_str
 
 
+def common_write(table: pd.DataFrame, root: str, overwrite: bool = False):
+    columns = table.columns
+    if not "submission_id" in columns and not "date" in columns:
+        raise Exception("submission_id and date are not in the columns of summary")
+    submission_id = table["submission_id"].values[0]
+    date_str = table["date"].values[0]
+    save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
+    if not overwrite and os.path.isfile(save_csv_to):
+        raise Exception(f"{save_csv_to} exists")
+    table.to_csv(save_csv_to)
+
+
 class SentimentRow:
     def __init__(self):
         self._submission_id = None
@@ -110,15 +122,7 @@ class Sentiment:
             return self._table
 
     def write(self, root: str, overwrite: bool = False):
-        columns = self.table.columns
-        if not "submission_id" in columns and not "date" in columns:
-            raise Exception("submission_id and date are not in the columns of summary")
-        submission_id = self.table["submission_id"].values[0]
-        date_str = self.table["date"].values[0]
-        save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
-        if not overwrite and os.path.isfile(save_csv_to):
-            raise Exception(f"{save_csv_to} exists")
-        self.table.to_csv(save_csv_to)
+        common_write(self.table, root, overwrite)
 
 
 class CommentsRow:
@@ -195,12 +199,4 @@ class Comments:
             return self._table
 
     def write(self, root: str, overwrite: bool = False):
-        columns = self.table.columns
-        if not "submission_id" in columns and not "date" in columns:
-            raise Exception("submission_id and date are not in the columns of summary")
-        submission_id = self.table["submission_id"].values[0]
-        date_str = self.table["date"].values[0]
-        save_csv_to = os.path.join(root, f"{date_str}_{submission_id}.csv")
-        if not overwrite and os.path.isfile(save_csv_to):
-            raise Exception(f"{save_csv_to} exists")
-        self.table.to_csv(save_csv_to)
+        common_write(self.table, root, overwrite)

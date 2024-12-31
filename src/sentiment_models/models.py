@@ -1,7 +1,8 @@
-from src.sentiment_models.utils import huggingface_sentiment_analysis_pipeline
+from abc import ABC, abstractmethod
 from typing import Callable, Literal
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+from src.sentiment_models.utils import huggingface_sentiment_analysis_pipeline
 
 
 def get_finbert(device="cpu"):

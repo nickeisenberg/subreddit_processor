@@ -10,14 +10,12 @@ from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client
 )
-
 from src.text_processing import (
     lower_text_and_remove_all_non_asci
 )
-
 from src.summarize.summarize_tools import (
-    submission_sentiment_summarization,
-    table_sentiment_summariztion
+    table_sentiment_summariztion,
+    submission_sentiment_summarization_writer
 )
 
 
@@ -100,30 +98,20 @@ def crypto_daily_discussion_summarization(
         add_comments_to_database: bool = False, 
         root: str | None = None):
 
-    if add_comments_to_database and not return_comments:
-        raise Exception(
-            "add_comments_to_database is set to True but return_comments is set to False"
-        )
-
-    if (add_comments_to_database or add_summary_to_database) and not root:
-        raise Exception("root must be set")
-
     submission = get_crypto_daily_discussion_submission(
         reddit, year, month, day
     )
 
-    summary, comments =  submission_sentiment_summarization(
+    summary, comments =  submission_sentiment_summarization_writer(
         submission=submission,
-        praw_comment_preprocesser=comment_preprocesser,
+        comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
+        return_comments=return_comments, 
+        add_summary_to_database=add_summary_to_database, 
+        add_comments_to_database=add_comments_to_database, 
+        root=root
     )
-
-    if add_comments_to_database and root is not None:
-        summary.write(root)
-
-    if add_summary_to_database and root is not None:
-        comments.write(root)
     
     return summary, comments 
 
