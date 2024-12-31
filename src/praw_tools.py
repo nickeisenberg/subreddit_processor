@@ -38,7 +38,7 @@ def get_submission_list_from_subreddit(subreddit: Subreddit,
         raise Exception("")
 
     submission_list: list[Submission] = []
-    for i, sub in enumerate(submissions):
+    for _, sub in enumerate(submissions):
         submission_list.append(sub)
         if len(submission_list) == no_of_submissions:
             break

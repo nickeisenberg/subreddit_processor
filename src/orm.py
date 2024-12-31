@@ -49,6 +49,17 @@ class SentimentRow:
             "tickers_mentioned": self.tickers_mentioned 
         }
 
+    def propert_setter(self, submission_id: str, comment_id: str, date: str, 
+                       sentiment: Literal["positive", "negative", "neutral"], 
+                       sentiment_score: float, 
+                       tickers_mentioned: Iterable[str]):
+        self.submission_id = submission_id
+        self.comment_id = comment_id
+        self.date = date
+        self.sentiment = sentiment
+        self.sentiment_score = sentiment_score
+        self.tickers_mentioned = tickers_mentioned
+
     @property
     def date(self):
         return self._date
@@ -144,6 +155,14 @@ class CommentsRow:
             "date": self.date,
             "comment": self.comment 
         }
+
+    def property_setter(self, date: str, submission_id: str, comment_id: str, 
+                        comment: str):
+        self.date = date 
+        self.submission_id = submission_id 
+        self.comment_id = comment_id 
+        self.comment = comment 
+
 
     @property
     def date(self):

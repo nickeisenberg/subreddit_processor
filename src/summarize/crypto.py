@@ -93,7 +93,6 @@ def crypto_daily_discussion_summarization(
         comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
         ticker_finder: Callable[[str], list[str]],
-        return_comments: bool = False, 
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 
         root: str | None = None):
@@ -107,7 +106,6 @@ def crypto_daily_discussion_summarization(
         comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
         ticker_finder=ticker_finder,
-        return_comments=return_comments, 
         add_summary_to_database=add_summary_to_database, 
         add_comments_to_database=add_comments_to_database, 
         root=root

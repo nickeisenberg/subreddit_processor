@@ -30,13 +30,13 @@ def submission_sentiment_summarization(
         if isinstance(praw_comment, MoreComments):
             continue
 
-        summary_row = summary.new_row
         comments_row = comments.new_row
-
-        comments_row.date = date
-        comments_row.submission_id = submission_id
-        comments_row.comment_id = praw_comment.id
-        comments_row.comment = praw_comment.body 
+        comments_row.property_setter(
+            date=date,
+            submission_id=submission_id,
+            comment_id=praw_comment.id,
+            comment=praw_comment.body 
+        )
         comments.add_row(comments_row)
 
         processed_comment = praw_comment_preprocesser(
@@ -46,11 +46,16 @@ def submission_sentiment_summarization(
         if not processed_comment:
             continue
 
-        summary_row.date = date
-        summary_row.submission_id = submission_id
-        summary_row.comment_id = praw_comment.id
-        summary_row.sentiment, summary_row.sentiment_score = sentiment_model(processed_comment)
-        summary_row.tickers_mentioned = ticker_finder(processed_comment)
+        summary_row = summary.new_row
+        sentiment, sentiment_score = sentiment_model(processed_comment)
+        summary_row.propert_setter(
+            submission_id=submission_id,
+            comment_id=praw_comment.id,
+            date=date,
+            sentiment=sentiment,
+            sentiment_score=sentiment_score,
+            tickers_mentioned=ticker_finder(processed_comment)
+        )
         summary.add_row(summary_row)
 
     return summary, comments
@@ -77,15 +82,9 @@ def submission_sentiment_summarization_writer(
         comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
         ticker_finder: Callable[[str], list[str]],
-        return_comments: bool = False, 
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 
         root: str | None = None):
-
-    if add_comments_to_database and not return_comments:
-        raise Exception(
-            "add_comments_to_database is set to True but return_comments is set to False"
-        )
 
     if (add_comments_to_database or add_summary_to_database) and not root:
         raise Exception("root must be set")
