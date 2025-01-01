@@ -159,3 +159,19 @@ if __name__ == "__main__":
     sub = get_todays_crypto_daily_discussion_submission(reddit)
     path = "/home/nicholas/gitrepos/ticker_sentiment/data/crypto/daily_discussions/individual/2019-03-09_ayxcwl.csv"
     sum = table_sentiment_summariztion(path, default_comment_processer(), model, finder)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

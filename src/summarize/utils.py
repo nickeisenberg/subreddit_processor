@@ -8,7 +8,6 @@ from src.praw_tools import get_date_from_submission
 from src.praw_tools import (
     get_comments_from_submission,
 )
-from src.orm import Comments, Sentiment
 from src.summarize.callbacks import (
     Base, 
     SentimentProcessor, 
@@ -41,45 +40,16 @@ def get_sentiment_and_comments_from_submission(
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
         ticker_finder: Callable[[str], Iterable[str]]):
     
-    sentiment = Sentiment()
-    comments = Comments()
+    sentiment = SentimentProcessor(
+        praw_comment_preprocesser=praw_comment_preprocesser, 
+        sentiment_model=sentiment_model,
+        ticker_finder=ticker_finder
+    )
+    comments = CommentProcessor()
 
-    submission_id = submission.id
-    date = get_date_from_submission(submission)
+    _ = submission_processor(submission, [sentiment, comments])
 
-    for praw_comment in get_comments_from_submission(submission):
-        if isinstance(praw_comment, MoreComments):
-            continue
-
-        comments.add_row(
-            comments.new_row(
-                date=date,
-                submission_id=submission_id,
-                comment_id=praw_comment.id,
-                comment=praw_comment.body 
-            )
-        )
-
-        processed_comment = praw_comment_preprocesser(
-            praw_comment.body
-        )
-
-        if not processed_comment:
-            continue
-
-        sentiment_label, sentiment_score = sentiment_model(processed_comment)
-        sentiment.add_row(
-            sentiment.new_row(
-                submission_id=submission_id,
-                comment_id=praw_comment.id,
-                date=date,
-                sentiment=sentiment_label,
-                sentiment_score=sentiment_score,
-                tickers_mentioned=ticker_finder(processed_comment)
-            )
-        )
-
-    return sentiment, comments
+    return sentiment.sentiment, comments.comments
 
 
 def table_sentiment_summariztion(

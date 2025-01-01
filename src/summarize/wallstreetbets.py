@@ -139,19 +139,20 @@ if __name__ == "__main__":
 
     from src.praw_tools import get_reddit_client 
     from src.sentiment_models.models import get_finbert
-    
+    from src.text_processing import default_comment_processer
+
     reddit = get_reddit_client()
     
     path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
     finder = get_ticker_finder(path)
-    
     finbert = get_finbert("cuda")
     
     sum, coms = wsb_daily_discussion_summarization(
-        reddit, 
-        2024, 
-        12, 
-        15,
-        finder,
-        finbert,
+        reddit=reddit, 
+        year=2024, 
+        month=12, 
+        day=15,
+        comment_preprocesser=default_comment_processer(),
+        ticker_finder=finder,
+        sentiment_model=finbert,
     )
