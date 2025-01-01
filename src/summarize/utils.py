@@ -9,6 +9,30 @@ from src.praw_tools import (
     get_comments_from_submission,
 )
 from src.orm import Comments, Sentiment
+from src.summarize.callbacks import (
+    Base, 
+    SentimentProcessor, 
+    CommentProcessor
+)
+
+
+def submission_processor(submission: Submission, callbacks: Iterable[Base]):
+    submission_id = submission.id
+    date = get_date_from_submission(submission)
+
+    for praw_comment in get_comments_from_submission(submission):
+        if isinstance(praw_comment, MoreComments):
+            continue
+
+        for callback in callbacks:
+            callback(
+                date=date,
+                submission_id=submission_id,
+                comment_id=praw_comment.id,
+                comment=praw_comment
+            )
+
+    return callbacks
 
 
 def get_sentiment_and_comments_from_submission(
@@ -29,9 +53,9 @@ def get_sentiment_and_comments_from_submission(
 
         comments.add_row(
             comments.new_row(
+                date=date,
                 submission_id=submission_id,
                 comment_id=praw_comment.id,
-                date=date,
                 comment=praw_comment.body 
             )
         )

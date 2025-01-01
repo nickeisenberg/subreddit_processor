@@ -1,16 +1,8 @@
-from abc import ABC, abstractmethod
 import os
 import pandas as pd
-from typing import Any, Iterable, Literal
+from typing import Callable, Iterable, Literal
 
-
-def get_submission_id_and_date_from_summary(summary: pd.DataFrame):
-    columns = summary.columns
-    if not "submission_id" in columns and not "date" in columns:
-        raise Exception("submission_id and date are not in the columns of summary")
-    submission_id = summary["submission_id"].values[0]
-    date_str = summary["date"].values[0]
-    return submission_id, date_str
+from src.orm.base import Row, Table
 
 
 def common_write(table: pd.DataFrame, root: str, overwrite: bool = False):
@@ -23,39 +15,6 @@ def common_write(table: pd.DataFrame, root: str, overwrite: bool = False):
     if not overwrite and os.path.isfile(save_csv_to):
         raise Exception(f"{save_csv_to} exists")
     table.to_csv(save_csv_to)
-
-
-class Row(ABC):
-    @property
-    @abstractmethod
-    def row_dict(self) -> dict[str, Any]:
-        pass
-
-    @property
-    def row(self):
-        return pd.DataFrame(self.row_dict, index=pd.Series([0]))
-
-
-class Table(ABC):
-    _table = pd.DataFrame(dtype=object)
-
-    @property
-    def table(self):
-        return self._table
-
-    def add_row(self, row):
-        if len(self._table) == 0:
-            self._table = row.row
-        else:
-            self._table = pd.concat([self._table, row.row]).reset_index(drop=True)
-
-    def load(self, path, **kwargs):
-        self._table = pd.read_csv(path, **kwargs)
-        self._rows = [pd.DataFrame([row]) for _, row in self._table.iterrows()]
-    
-    @abstractmethod
-    def write(self, *args, **kwargs):
-        pass
 
 
 class SentimentRow(Row):

@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from typing import Callable, Literal
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
