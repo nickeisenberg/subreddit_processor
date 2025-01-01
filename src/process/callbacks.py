@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import Callable, Iterable, Literal
 from praw.reddit import Comment
 
-from src.orm import Comments, Sentiment
+from src.data.orm import Comments, Sentiment
 
 
 class Base:
