@@ -1,3 +1,4 @@
+import datetime as dt
 from praw import Reddit
 from praw.reddit import Submission, Subreddit
 import os
@@ -101,3 +102,7 @@ def get_comments_from_submission_id(reddit: Reddit,
         submission=get_submission_from_id(reddit, submission_id),
         replace_more_limit=replace_more_limit
     )
+
+
+def get_date_from_submission(submission: Submission):
+    return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")

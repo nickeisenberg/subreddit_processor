@@ -4,14 +4,11 @@ from typing import Callable, Iterable, Literal
 from praw.models import MoreComments
 from praw.reddit import Submission
 
+from src.praw_tools import get_date_from_submission
 from src.praw_tools import (
     get_comments_from_submission,
 )
 from src.orm import Comments, Sentiment
-
-
-def get_date_from_submission(submission: Submission):
-    return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
 
 
 def get_sentiment_and_comments_from_submission(
@@ -30,13 +27,14 @@ def get_sentiment_and_comments_from_submission(
         if isinstance(praw_comment, MoreComments):
             continue
 
-        comments_row = comments.new_row(
-            submission_id=submission_id,
-            comment_id=praw_comment.id,
-            date=date,
-            comment=praw_comment.body 
+        comments.add_row(
+            comments.new_row(
+                submission_id=submission_id,
+                comment_id=praw_comment.id,
+                date=date,
+                comment=praw_comment.body 
+            )
         )
-        comments.add_row(comments_row)
 
         processed_comment = praw_comment_preprocesser(
             praw_comment.body
@@ -46,15 +44,16 @@ def get_sentiment_and_comments_from_submission(
             continue
 
         sentiment_label, sentiment_score = sentiment_model(processed_comment)
-        sentiment_row = sentiment.new_row(
-            submission_id=submission_id,
-            comment_id=praw_comment.id,
-            date=date,
-            sentiment=sentiment_label,
-            sentiment_score=sentiment_score,
-            tickers_mentioned=ticker_finder(processed_comment)
+        sentiment.add_row(
+            sentiment.new_row(
+                submission_id=submission_id,
+                comment_id=praw_comment.id,
+                date=date,
+                sentiment=sentiment_label,
+                sentiment_score=sentiment_score,
+                tickers_mentioned=ticker_finder(processed_comment)
+            )
         )
-        sentiment.add_row(sentiment_row)
 
     return sentiment, comments
 

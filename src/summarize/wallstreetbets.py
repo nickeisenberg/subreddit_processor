@@ -4,7 +4,7 @@ from typing import Callable, Literal
 from praw import Reddit
 from praw.reddit import Submission
 
-from src.summarize.summarize_tools import submission_sentiment_summarization_writer
+from src.summarize.utils import submission_sentiment_summarization_writer
 from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client

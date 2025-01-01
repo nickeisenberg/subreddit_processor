@@ -13,7 +13,7 @@ from src.praw_tools import (
 from src.text_processing import (
     lower_text_and_remove_all_non_asci
 )
-from src.summarize.summarize_tools import (
+from src.summarize.utils import (
     table_sentiment_summariztion,
     submission_sentiment_summarization_writer
 )

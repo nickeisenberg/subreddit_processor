@@ -1,6 +1,7 @@
+from abc import ABC, abstractmethod
 import os
 import pandas as pd
-from typing import Iterable, Literal
+from typing import Any, Iterable, Literal
 
 
 def get_submission_id_and_date_from_summary(summary: pd.DataFrame):
@@ -24,7 +25,40 @@ def common_write(table: pd.DataFrame, root: str, overwrite: bool = False):
     table.to_csv(save_csv_to)
 
 
-class SentimentRow:
+class Row(ABC):
+    @property
+    @abstractmethod
+    def row_dict(self) -> dict[str, Any]:
+        pass
+
+    @property
+    def row(self):
+        return pd.DataFrame(self.row_dict, index=pd.Series([0]))
+
+
+class Table(ABC):
+    _table = pd.DataFrame(dtype=object)
+
+    @property
+    def table(self):
+        return self._table
+
+    def add_row(self, row):
+        if len(self._table) == 0:
+            self._table = row.row
+        else:
+            self._table = pd.concat([self._table, row.row]).reset_index(drop=True)
+
+    def load(self, path, **kwargs):
+        self._table = pd.read_csv(path, **kwargs)
+        self._rows = [pd.DataFrame([row]) for _, row in self._table.iterrows()]
+    
+    @abstractmethod
+    def write(self, *args, **kwargs):
+        pass
+
+
+class SentimentRow(Row):
     def __init__(self, submission_id: str, comment_id: str, date: str, 
                  sentiment: Literal["positive", "negative", "neutral"], 
                  sentiment_score: float, 
@@ -37,10 +71,6 @@ class SentimentRow:
         self.tickers_mentioned = ", ".join(tickers_mentioned) if tickers_mentioned else "N/A"
     
     @property
-    def row(self):
-        return pd.DataFrame(self.row_dict, index=pd.Series([0]))
-    
-    @property
     def row_dict(self):
         return {
             "submission_id": self.submission_id,
@@ -50,43 +80,24 @@ class SentimentRow:
             "sentiment_score": self.sentiment_score,
             "tickers_mentioned": self.tickers_mentioned 
         }
-
-
-class Sentiment:
-    def __init__(self):
-        self.rows: list[pd.DataFrame] = []
-        self._table = pd.DataFrame(dtype=object)
     
+
+class Sentiment(Table):
     @property
     def new_row(self):
         return SentimentRow
-
-    def add_row(self, row: SentimentRow):
-        self.rows.append(row.row)
-    
-    @property
-    def table(self):
-        if len(self.rows) == len(self._table):
-            return self._table
-        else:
-            self._table = pd.concat(self.rows).reset_index(drop=True)
-            return self._table
 
     def write(self, root: str, overwrite: bool = False):
         common_write(self.table, root, overwrite)
 
 
-class CommentsRow:
+class CommentsRow(Row):
     def __init__(self, date: str, submission_id: str, comment_id: str,
                  comment: str):
         self.date = date 
         self.submission_id = submission_id 
         self.comment_id = comment_id
         self.comment = comment
-    
-    @property
-    def row(self):
-        return pd.DataFrame(self.row_dict, index=pd.Series([0]))
 
     @property
     def row_dict(self):
@@ -98,25 +109,19 @@ class CommentsRow:
         }
 
 
-class Comments:
-    def __init__(self):
-        self.rows: list[pd.DataFrame] = []
-        self._table = pd.DataFrame(dtype=object)
-    
+class Comments(Table):
     @property
     def new_row(self):
         return CommentsRow
 
-    def add_row(self, row: CommentsRow):
-        self.rows.append(row.row)
-    
-    @property
-    def table(self):
-        if len(self.rows) == len(self._table):
-            return self._table
-        else:
-            self._table = pd.concat(self.rows).reset_index(drop=True)
-            return self._table
-
     def write(self, root: str, overwrite: bool = False):
         common_write(self.table, root, overwrite)
+
+
+if __name__ == "__main__":
+    coms = Comments()
+    row0 = coms.new_row("2024-01-01", "00a1", "00b1", "hello there")
+    coms.add_row(row0)
+    row1 = coms.new_row("2024-01-02", "00a2", "00b2", "another comment")
+    coms.add_row(row1)
+    print(coms.table)
