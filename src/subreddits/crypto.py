@@ -13,9 +13,9 @@ from src.praw_tools import (
 from src.text_processing import (
     lower_text_and_remove_all_non_asci
 )
-from src.summarize.utils import (
+from src.process.utils import (
     table_sentiment_summariztion,
-    submission_sentiment_summarization_writer
+    get_sentiment_and_comments_from_submission 
 )
 
 
@@ -101,11 +101,11 @@ def crypto_daily_discussion_summarization(
         reddit, year, month, day
     )
 
-    summary, comments =  submission_sentiment_summarization_writer(
+    summary, comments =  get_sentiment_and_comments_from_submission(
         submission=submission,
-        comment_preprocesser=comment_preprocesser,
+        praw_comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
-        ticker_finder=ticker_finder,
+        phrase_finder=ticker_finder,
         add_summary_to_database=add_summary_to_database, 
         add_comments_to_database=add_comments_to_database, 
         root=root
@@ -141,7 +141,7 @@ def update_crypto_datebase_dailies(root: str, reddit: Reddit,
         dates_to_look_for.set_postfix(progress=f"{i + 1} / {len(dates_to_look_for)}")
         try:
             add_crypto_daily_discussion_summary_to_database(
-                root=root, reddit=reddit, date=date, ticker_finder=ticker_finder,
+                root=root, reddit=reddit, date=date, phrase_finder=ticker_finder,
                 sentiment_model=sentiment_model
             )
         except Exception as e:

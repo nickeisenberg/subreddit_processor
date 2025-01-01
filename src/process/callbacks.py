@@ -1,8 +1,7 @@
 from abc import abstractmethod
-from typing import Callable, Iterable
-
-from datasets.utils.py_utils import Literal
+from typing import Callable, Iterable, Literal
 from praw.reddit import Comment
+
 from src.orm import Comments, Sentiment
 
 
@@ -32,12 +31,12 @@ class SentimentProcessor(Base):
     def __init__(self,
                  praw_comment_preprocesser: Callable[[str], str],
                  sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
-                 ticker_finder: Callable[[str], Iterable[str]]):
+                 phrase_finder: Callable[[str], Iterable[str]]):
 
         self.sentiment = Sentiment()
         self.praw_comment_preprocesser = praw_comment_preprocesser
         self.sentiment_model = sentiment_model
-        self.ticker_finder = ticker_finder
+        self.phrase_finder = phrase_finder 
 
     def __call__(self, date, submission_id, comment_id, comment):
         processed_comment = self.praw_comment_preprocesser(comment)
@@ -50,6 +49,6 @@ class SentimentProcessor(Base):
                     date=date,
                     sentiment=sentiment_label,
                     sentiment_score=sentiment_score,
-                    tickers_mentioned=self.ticker_finder(processed_comment)
+                    tickers_mentioned=self.phrase_finder(processed_comment)
                 )
             )

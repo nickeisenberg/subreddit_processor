@@ -4,7 +4,7 @@ from typing import Callable, Literal
 from praw import Reddit
 from praw.reddit import Submission
 
-from src.summarize.utils import submission_sentiment_summarization_writer
+from src.process.utils import get_sentiment_and_comments_from_submission 
 from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client
@@ -121,11 +121,11 @@ def wsb_daily_discussion_summarization(
         reddit, year, month, day
     )
 
-    summary, comments =  submission_sentiment_summarization_writer(
+    summary, comments =  get_sentiment_and_comments_from_submission(
         submission=submission,
-        comment_preprocesser=comment_preprocesser,
+        praw_comment_preprocesser=comment_preprocesser,
         sentiment_model=sentiment_model,
-        ticker_finder=ticker_finder,
+        phrase_finder=ticker_finder,
         add_summary_to_database=add_summary_to_database, 
         add_comments_to_database=add_comments_to_database, 
         root=root

@@ -1,4 +1,3 @@
-import datetime as dt
 import pandas as pd
 from typing import Callable, Iterable, Literal
 from praw.models import MoreComments
@@ -8,7 +7,7 @@ from src.praw_tools import get_date_from_submission
 from src.praw_tools import (
     get_comments_from_submission,
 )
-from src.summarize.callbacks import (
+from src.process.callbacks import (
     Base, 
     SentimentProcessor, 
     CommentProcessor
@@ -38,16 +37,28 @@ def get_sentiment_and_comments_from_submission(
         submission: Submission,
         praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
-        ticker_finder: Callable[[str], Iterable[str]]):
+        phrase_finder: Callable[[str], Iterable[str]],
+        add_summary_to_database: bool = False, 
+        add_comments_to_database: bool = False, 
+        root: str | None = None):
+
+    if (add_comments_to_database or add_summary_to_database) and not root:
+        raise Exception("root must be set")
     
     sentiment = SentimentProcessor(
         praw_comment_preprocesser=praw_comment_preprocesser, 
         sentiment_model=sentiment_model,
-        ticker_finder=ticker_finder
+        phrase_finder=phrase_finder
     )
     comments = CommentProcessor()
 
     _ = submission_processor(submission, [sentiment, comments])
+
+    if add_comments_to_database and root is not None:
+        comments.comments.write(root)
+
+    if add_summary_to_database and root is not None:
+        sentiment.sentiment.write(root)
 
     return sentiment.sentiment, comments.comments
 
@@ -56,7 +67,7 @@ def table_sentiment_summariztion(
         table: str | pd.DataFrame,
         praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
-        ticker_finder: Callable[[str], Iterable[str]]):
+        phrase_finder: Callable[[str], Iterable[str]]):
 
     if isinstance(table, str):
         table = pd.read_csv(table, index_col=0)
@@ -64,36 +75,8 @@ def table_sentiment_summariztion(
     table["comment"] = table["comment"].map(praw_comment_preprocesser).map(lambda x: None if x == "" else x)
     table = table.dropna()
     table[["sentiment", "sentiment_score"]] = table["comment"].map(sentiment_model).apply(pd.Series)
-    table["tickers_mentioned"] = table["comment"].map(ticker_finder)
+    table["tickers_mentioned"] = table["comment"].map(phrase_finder)
     return table.drop(columns="comment")
-
-
-def submission_sentiment_summarization_writer(
-        submission: Submission,
-        comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
-        ticker_finder: Callable[[str], list[str]],
-        add_summary_to_database: bool = False, 
-        add_comments_to_database: bool = False, 
-        root: str | None = None):
-
-    if (add_comments_to_database or add_summary_to_database) and not root:
-        raise Exception("root must be set")
-
-    summary, comments =  get_sentiment_and_comments_from_submission(
-        submission=submission,
-        praw_comment_preprocesser=comment_preprocesser,
-        sentiment_model=sentiment_model,
-        ticker_finder=ticker_finder,
-    )
-
-    if add_comments_to_database and root is not None:
-        comments.write(root)
-
-    if add_summary_to_database and root is not None:
-        summary.write(root)
-    
-    return summary, comments 
 
 
 if __name__ == "__main__": 
