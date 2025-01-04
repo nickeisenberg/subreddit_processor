@@ -1,7 +1,7 @@
 import os
 import datetime as dt
 from tqdm import tqdm
-from typing import Callable, Literal
+from typing import Callable
 from praw import Reddit
 from praw.reddit import Submission
 from pycoingecko import CoinGeckoAPI
@@ -10,11 +10,11 @@ from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client
 )
-from src.sentiment.models.models import SentimentModel
+from src.process.models.models import SentimentModel
 from src.text_processing import (
     lower_text_and_remove_all_non_asci
 )
-from src.sentiment.process import (
+from src.process.process import (
     table_sentiment_summariztion,
     get_sentiment_and_comments_from_submission 
 )

@@ -7,12 +7,12 @@ from src.praw_tools import get_date_from_submission
 from src.praw_tools import (
     get_comments_from_submission,
 )
-from src.sentiment.callbacks import (
+from src.process.callbacks import (
     Base, 
     SentimentProcessor, 
     CommentProcessor
 )
-from src.sentiment.models.models import SentimentModel
+from src.process.models.models import SentimentModel
 
 
 def submission_processor(submission: Submission, callbacks: Iterable[Base]):
@@ -78,9 +78,8 @@ def get_sentiment_from_table(
         sentiment_model: SentimentModel,
         phrase_finder: Callable[[str], Iterable[str]],
         add_summary_to_database: bool = False, 
-        add_comments_to_database: bool = False, 
         root: str | None = None):
-    if (add_comments_to_database or add_summary_to_database) and not root:
+    if add_summary_to_database and not root:
         raise Exception("root must be set")
     
     sentiment = SentimentProcessor(

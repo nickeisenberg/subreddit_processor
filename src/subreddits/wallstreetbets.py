@@ -4,7 +4,8 @@ from typing import Callable
 from praw import Reddit
 from praw.reddit import Submission
 
-from src.sentiment.process import get_sentiment_and_comments_from_submission 
+from src.process.process import get_sentiment_and_comments_from_submission 
+from src.process.models.models import SentimentModel
 from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client
@@ -12,7 +13,6 @@ from src.praw_tools import (
 from src.text_processing import (
     lower_text_and_remove_all_non_asci,
 )
-from src.sentiment.models.models import SentimentModel
 
 
 def get_tickers(path) -> list[str]:
