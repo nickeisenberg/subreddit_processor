@@ -23,6 +23,5 @@ def default_comment_processer(max_len: int = 512):
         return processed_text if len(processed_text) <= max_len else ""
     return _
 
-
 if __name__ == "__main__":
     pass

@@ -57,21 +57,6 @@ class SentimentProcessor(Base):
 if __name__ == "__main__":
     pass
 
-    import os
-    import pandas as pd
-    from src.sentiment.models.models import get_twitter_roberta_base
-    from src.text_processing import default_comment_processer
-    from src.subreddits.crypto import get_crypto_ticker_finder
-    from src.sentiment.process import get_sentiment_from_table 
-    
-    model = get_twitter_roberta_base()
-    finder = get_crypto_ticker_finder(100)
-    sentiment_processor = SentimentProcessor(
-        default_comment_processer(), model, finder
-    )
-    
-    root = "/home/nicholas/gitrepos/ticker_sentiment/database/crypto/daily_discussions/individual/comments"
-    dfs = [pd.read_csv(os.path.join(root, path), index_col=0) for path in os.listdir(root)]
 
 
 
