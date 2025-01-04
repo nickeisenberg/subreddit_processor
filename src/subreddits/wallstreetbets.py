@@ -4,7 +4,7 @@ from typing import Callable, Literal
 from praw import Reddit
 from praw.reddit import Submission
 
-from src.process.utils import get_sentiment_and_comments_from_submission 
+from src.sentiment.process import get_sentiment_and_comments_from_submission 
 from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client

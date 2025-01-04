@@ -13,7 +13,7 @@ from src.praw_tools import (
 from src.text_processing import (
     lower_text_and_remove_all_non_asci
 )
-from src.process.utils import (
+from src.sentiment.process import (
     table_sentiment_summariztion,
     get_sentiment_and_comments_from_submission 
 )
@@ -159,19 +159,3 @@ if __name__ == "__main__":
     sub = get_todays_crypto_daily_discussion_submission(reddit)
     path = "/home/nicholas/gitrepos/ticker_sentiment/data/crypto/daily_discussions/individual/2019-03-09_ayxcwl.csv"
     sum = table_sentiment_summariztion(path, default_comment_processer(), model, finder)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

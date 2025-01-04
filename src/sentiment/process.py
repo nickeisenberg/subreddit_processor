@@ -1,5 +1,5 @@
-import pandas as pd
 from typing import Callable, Iterable, Literal
+import pandas as pd
 from praw.models import MoreComments
 from praw.reddit import Submission
 
@@ -7,7 +7,7 @@ from src.praw_tools import get_date_from_submission
 from src.praw_tools import (
     get_comments_from_submission,
 )
-from src.process.callbacks import (
+from src.sentiment.callbacks import (
     Base, 
     SentimentProcessor, 
     CommentProcessor
@@ -30,6 +30,14 @@ def submission_processor(submission: Submission, callbacks: Iterable[Base]):
                 comment=praw_comment
             )
 
+    return callbacks
+
+
+def table_processor(table: pd.DataFrame, callbacks: Iterable[Base]):
+    for _, x in table.iterrows():
+        kwargs = {col: x[col] for col in x.index.values}
+        for callback in callbacks:
+            callback(**kwargs)
     return callbacks
 
 
@@ -63,6 +71,31 @@ def get_sentiment_and_comments_from_submission(
     return sentiment.sentiment, comments.comments
 
 
+def get_sentiment_from_table(
+        table: pd.DataFrame,
+        praw_comment_preprocesser: Callable[[str], str],
+        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        phrase_finder: Callable[[str], Iterable[str]],
+        add_summary_to_database: bool = False, 
+        add_comments_to_database: bool = False, 
+        root: str | None = None):
+    if (add_comments_to_database or add_summary_to_database) and not root:
+        raise Exception("root must be set")
+    
+    sentiment = SentimentProcessor(
+        praw_comment_preprocesser=praw_comment_preprocesser, 
+        sentiment_model=sentiment_model,
+        phrase_finder=phrase_finder
+    )
+
+    _ = table_processor(table, [sentiment])
+
+    if add_summary_to_database and root is not None:
+        sentiment.sentiment.write(root)
+
+    return sentiment.sentiment
+
+
 def table_sentiment_summariztion(
         table: str | pd.DataFrame,
         praw_comment_preprocesser: Callable[[str], str],
@@ -80,32 +113,5 @@ def table_sentiment_summariztion(
 
 
 if __name__ == "__main__": 
-    from src.sentiment_models.models import get_twitter_roberta_base
-    from src.text_processing import default_comment_processer
-    
-    model = get_twitter_roberta_base()
-    
-    def finder(string: str):
-        ticks = ["gme", "amzn"]
-        return_ticks = []
-        for word in string.split(" "):
-            if word in ticks:
-                return_ticks.append(word)
-        return ", ".join(list(set(return_ticks)))
-    
-    x = pd.DataFrame(
-        {
-            "com_ids": [
-                "qe43", 
-                "asdf", 
-                "34532"
-            ], 
-            "comment": [
-                "GME is the first and amzn sucks", 
-                "hello there", 
-                "this is shitty"
-            ], 
-        }
-    )
-    
-    table_sentiment_summariztion(x, default_comment_processer(512), model, finder)
+    pass
+
