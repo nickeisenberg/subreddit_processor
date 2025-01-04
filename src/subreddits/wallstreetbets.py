@@ -1,6 +1,6 @@
 import datetime as dt
 import pandas as pd
-from typing import Callable, Literal
+from typing import Callable
 from praw import Reddit
 from praw.reddit import Submission
 
@@ -12,6 +12,7 @@ from src.praw_tools import (
 from src.text_processing import (
     lower_text_and_remove_all_non_asci,
 )
+from src.sentiment.models.models import SentimentModel
 
 
 def get_tickers(path) -> list[str]:
@@ -111,7 +112,7 @@ def wsb_daily_discussion_summarization(
         month: int,
         day: int, 
         comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        sentiment_model: SentimentModel,
         ticker_finder: Callable[[str], list[str]],
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 

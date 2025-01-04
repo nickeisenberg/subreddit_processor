@@ -12,6 +12,7 @@ from src.sentiment.callbacks import (
     SentimentProcessor, 
     CommentProcessor
 )
+from src.sentiment.models.models import SentimentModel
 
 
 def submission_processor(submission: Submission, callbacks: Iterable[Base]):
@@ -44,7 +45,7 @@ def table_processor(table: pd.DataFrame, callbacks: Iterable[Base]):
 def get_sentiment_and_comments_from_submission(
         submission: Submission,
         praw_comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        sentiment_model: SentimentModel,
         phrase_finder: Callable[[str], Iterable[str]],
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 
@@ -74,7 +75,7 @@ def get_sentiment_and_comments_from_submission(
 def get_sentiment_from_table(
         table: pd.DataFrame,
         praw_comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        sentiment_model: SentimentModel,
         phrase_finder: Callable[[str], Iterable[str]],
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 

@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Callable, Iterable, Literal
 from praw.reddit import Comment
 
+from src.sentiment.models.models import SentimentModel
 from src.data.orm import Comments, Sentiment
 
 
@@ -30,7 +31,7 @@ class CommentProcessor(Base):
 class SentimentProcessor(Base):
     def __init__(self,
                  praw_comment_preprocesser: Callable[[str], str],
-                 sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+                 sentiment_model: SentimentModel,
                  phrase_finder: Callable[[str], Iterable[str]]):
 
         self.sentiment = Sentiment()
@@ -47,7 +48,8 @@ class SentimentProcessor(Base):
                     submission_id=submission_id,
                     comment_id=comment_id,
                     date=date,
-                    sentiment=sentiment_label,
+                    sentiment_model=self.sentiment_model.name,
+                    sentiment_label=sentiment_label,
                     sentiment_score=sentiment_score,
                     tickers_mentioned=self.phrase_finder(processed_comment)
                 )

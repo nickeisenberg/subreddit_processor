@@ -10,6 +10,7 @@ from src.praw_tools import (
     get_submission_list_by_search,
     get_reddit_client
 )
+from src.sentiment.models.models import SentimentModel
 from src.text_processing import (
     lower_text_and_remove_all_non_asci
 )
@@ -91,7 +92,7 @@ def crypto_daily_discussion_summarization(
         month: int,
         day: int, 
         comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
+        sentiment_model: SentimentModel,
         ticker_finder: Callable[[str], list[str]],
         add_summary_to_database: bool = False, 
         add_comments_to_database: bool = False, 

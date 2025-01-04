@@ -49,14 +49,16 @@ class Table(ABC):
 
 
 class SentimentRow(Row):
-    def __init__(self, submission_id: str, comment_id: str, date: str, 
-                 sentiment: Literal["positive", "negative", "neutral"], 
+    def __init__(self, submission_id: str, comment_id: str, date: str,
+                 sentiment_model: str,
+                 sentiment_label: Literal["positive", "negative", "neutral"], 
                  sentiment_score: float, 
                  tickers_mentioned: Iterable[str]):
         self.submission_id = submission_id
         self.comment_id = comment_id
         self.date = date
-        self.sentiment = sentiment
+        self.sentiment_model = sentiment_model
+        self.sentiment_label = sentiment_label
         self.sentiment_score = sentiment_score
         self.tickers_mentioned = ", ".join(tickers_mentioned) if tickers_mentioned else "N/A"
     
@@ -66,7 +68,8 @@ class SentimentRow(Row):
             "submission_id": self.submission_id,
             "comment_id": self.comment_id,
             "date": self.date,
-            "sentiment": self.sentiment,
+            "sentiment_model": self.sentiment_model,
+            "sentiment_label": self.sentiment_label,
             "sentiment_score": self.sentiment_score,
             "tickers_mentioned": self.tickers_mentioned 
         }
