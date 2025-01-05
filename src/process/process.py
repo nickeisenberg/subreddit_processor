@@ -1,25 +1,23 @@
-from typing import Callable, Iterable, Literal
+from typing import Callable, Iterable
 import pandas as pd
 from praw.models import MoreComments
 from praw.reddit import Submission
 
+import src.praw_tools as praw_tools
 from src.praw_tools import get_date_from_submission
-from src.praw_tools import (
-    get_comments_from_submission,
-)
 from src.process.callbacks import (
-    Base, 
+    Processor, 
     SentimentProcessor, 
     CommentProcessor
 )
 from src.process.models.models import SentimentModel
 
 
-def submission_processor(submission: Submission, callbacks: Iterable[Base]):
+def submission_processor(submission: Submission, callbacks: Iterable[Processor]):
     submission_id = submission.id
     date = get_date_from_submission(submission)
 
-    for praw_comment in get_comments_from_submission(submission):
+    for praw_comment in praw_tools.get_comments_from_submission(submission):
         if isinstance(praw_comment, MoreComments):
             continue
 
@@ -34,12 +32,31 @@ def submission_processor(submission: Submission, callbacks: Iterable[Base]):
     return callbacks
 
 
-def table_processor(table: pd.DataFrame, callbacks: Iterable[Base]):
+def table_processor(table: pd.DataFrame, callbacks: Iterable[Processor]):
     for _, x in table.iterrows():
         kwargs = {col: x[col] for col in x.index.values}
         for callback in callbacks:
             callback(**kwargs)
     return callbacks
+
+
+def get_comments_from_submission(
+        submission: Submission,
+        praw_comment_preprocesser: Callable[[str], str],
+        add_comments_to_database: bool = False, 
+        root: str | None = None):
+
+    if add_comments_to_database and not root:
+        raise Exception("root must be set")
+
+    comments = CommentProcessor()
+
+    _ = submission_processor(submission, [comments])
+
+    if add_comments_to_database and root is not None:
+        comments.comments.write(root)
+
+    return comments.comments
 
 
 def get_sentiment_and_comments_from_submission(
@@ -96,22 +113,5 @@ def get_sentiment_from_table(
     return sentiment.sentiment
 
 
-def table_sentiment_summariztion(
-        table: str | pd.DataFrame,
-        praw_comment_preprocesser: Callable[[str], str],
-        sentiment_model: Callable[[str], tuple[Literal["positive", "neutral", "negative"], float]],
-        phrase_finder: Callable[[str], Iterable[str]]):
-
-    if isinstance(table, str):
-        table = pd.read_csv(table, index_col=0)
-
-    table["comment"] = table["comment"].map(praw_comment_preprocesser).map(lambda x: None if x == "" else x)
-    table = table.dropna()
-    table[["sentiment", "sentiment_score"]] = table["comment"].map(sentiment_model).apply(pd.Series)
-    table["tickers_mentioned"] = table["comment"].map(phrase_finder)
-    return table.drop(columns="comment")
-
-
 if __name__ == "__main__": 
     pass
-

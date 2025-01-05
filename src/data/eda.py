@@ -1,87 +1,15 @@
 from copy import deepcopy
-import json
 import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import json
-import datetime as dt
 import yfinance as yf
 
 
-def make_date_id_map(root: str, save_to: str | None = None):
-    basenames = [x for x in os.listdir(root) if x.endswith(".csv")]
-    date_to_id_map = {xx[0]: xx[1] for xx in [x.split(".")[0].split("_") for x in basenames]}
-    if save_to:
-        with open(save_to, "w") as write:
-            json.dump(date_to_id_map, write, indent=4)
-    return date_to_id_map
-
-
-def get_date_to_id_map(path):
-    with open(path, "r") as f:
-        return json.load(f)
-
-
-def make_all_csv(root: str, save_to: str):
-    paths = sorted(
-        [
-            os.path.join(root, x) 
-            for x in os.listdir(root) if x.endswith(".csv")
-        ]
-    )
-    dates = [os.path.basename(x).split("_")[0].split("/")[-1] for x in paths]
-    ids = [os.path.basename(x).split("_")[1].split(".")[0] for x in paths]
-    id_date = [[x, y] for x, y in zip(ids, dates)]
-    id_date_df = pd.DataFrame(id_date, columns=pd.Series(["submission_id", "date"]))
-    dfs = [
-        pd.read_csv(path, index_col=0, na_values=[], keep_default_na=False)
-        for path in paths
-    ]
-    df = pd.concat(dfs)
-
-    df_with_dates = pd.merge(
-        df, id_date_df, "left", left_on="submission_id", right_on="submission_id"
-    )
-    if save_to:
-        df_with_dates.to_csv(save_to)
-    return df_with_dates
-
-
-def get_all_csv(path: str):
-    if not os.path.isfile(path):
-        raise Exception("all_csv not found")
-    else:
-        return pd.read_csv(path, index_col=0, na_values=[], keep_default_na=False)
-
-
-def combine_dfs_by_date_range(root:str, start_date: str, end_date: str):
-    with open("data/date_id_key.json", "r") as f:
-        date_id_map = json.load(f)
-            
-    date_id_df = pd.DataFrame(
-        [[k, v] for k, v in date_id_map.items()], 
-        columns=pd.Series(["date", "submission_id"])
-    )
-
-    dfs = []
-    current = dt.datetime.strptime(start_date, "%Y_%m_%d")
-    before = True
-    while before:
-        current_date = current.strftime("%Y_%m_%d")
-        current_path = os.path.join(root, f"{current_date}-{date_id_map[current_date]}.csv")
-        if os.path.isfile(current_path):
-            df = pd.read_csv(
-                current_path, index_col=0, na_values=[], keep_default_na=False
-            )
-            dfs.append(
-                pd.merge(df, date_id_df, left_on="submission_id", right_on="submission_id")
-            )
-        current = current + dt.timedelta(days=1)
-        if current > dt.datetime.strptime(end_date, "%Y_%m_%d"):
-            before = False
-
-    return pd.concat(dfs).reset_index(drop=True)
+def make_all_csv(root: str):
+    paths = [os.path.join(root, x) for x in os.listdir(root)]
+    dfs = [pd.read_csv(path, index_col=0) for path in paths]
+    return pd.concat(dfs).sort_values("date")
 
 
 def isolate_ticker(symbol: str):
@@ -113,19 +41,19 @@ def get_ticker_counts_by_date(df: pd.DataFrame, ticker: str):
 def get_pos_neutral_neg_from_daily(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
         df = replace_tickers_mentioned_with_one_ticker(df, ticker)
-    return df.groupby("sentiment")["sentiment_score"].mean()
+    return df.groupby("sentiment_label")["sentiment_score"].mean()
 
 
 def get_pos_neutral_neg_by_date(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
         df = replace_tickers_mentioned_with_one_ticker(df, ticker)
-    return df.groupby(["date", "sentiment"])["sentiment_score"].mean()
+    return df.groupby(["date", "sentiment_label"])["sentiment_score"].mean()
 
 
 def get_pos_neg_by_date(df: pd.DataFrame, ticker: str | None = None):
     y = get_pos_neutral_neg_by_date(df, ticker)
-    pos = y.loc[y.index.get_level_values(1) == 'positive'].reset_index().drop("sentiment", axis=1)
-    neg = y.loc[y.index.get_level_values(1) == 'negative'].reset_index().drop("sentiment", axis=1)
+    pos = y.loc[y.index.get_level_values(1) == 'positive'].reset_index().drop("sentiment_label", axis=1)
+    neg = y.loc[y.index.get_level_values(1) == 'negative'].reset_index().drop("sentiment_label", axis=1)
     comb = pd.merge(
         pos, neg, how="outer", left_on="date", right_on="date",
         suffixes=("_pos", "_neg")

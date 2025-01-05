@@ -53,14 +53,14 @@ class SentimentRow(Row):
                  sentiment_model: str,
                  sentiment_label: Literal["positive", "negative", "neutral"], 
                  sentiment_score: float, 
-                 tickers_mentioned: Iterable[str]):
+                 phrases_mentioned: Iterable[str]):
         self.submission_id = submission_id
         self.comment_id = comment_id
         self.date = date
         self.sentiment_model = sentiment_model
         self.sentiment_label = sentiment_label
         self.sentiment_score = sentiment_score
-        self.tickers_mentioned = ", ".join(tickers_mentioned) if tickers_mentioned else "N/A"
+        self.phrases_mentioned = ", ".join(phrases_mentioned) if phrases_mentioned else "N/A"
     
     @property
     def row_dict(self):
@@ -71,7 +71,7 @@ class SentimentRow(Row):
             "sentiment_model": self.sentiment_model,
             "sentiment_label": self.sentiment_label,
             "sentiment_score": self.sentiment_score,
-            "tickers_mentioned": self.tickers_mentioned 
+            "tickers_mentioned": self.phrases_mentioned 
         }
     
 

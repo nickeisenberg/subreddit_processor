@@ -1,18 +1,19 @@
-from abc import abstractmethod
-from typing import Callable, Iterable, Literal
+from abc import ABC, abstractmethod
+from typing import Callable, Iterable
+
 from praw.reddit import Comment
 
 from src.process.models.models import SentimentModel
 from src.data.orm import Comments, Sentiment
 
 
-class Base:
+class Processor(ABC):
     @abstractmethod
-    def __call__(self, date, submission_id, comment_id, comment):
+    def __call__(self, date, submission_id, comment_id, comment, **kwargs):
         pass
 
 
-class CommentProcessor(Base):
+class CommentProcessor(Processor):
     def __init__(self):
         self.comments = Comments()
 
@@ -28,7 +29,7 @@ class CommentProcessor(Base):
         )
 
 
-class SentimentProcessor(Base):
+class SentimentProcessor(Processor):
     def __init__(self,
                  praw_comment_preprocesser: Callable[[str], str],
                  sentiment_model: SentimentModel,

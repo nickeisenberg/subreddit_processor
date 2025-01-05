@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Literal
+
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from src.sentiment.models.utils import huggingface_sentiment_analysis_pipeline
+from src.process.models.utils import huggingface_sentiment_analysis_pipeline
 
 
 class SentimentModel(ABC):
@@ -16,21 +17,6 @@ class SentimentModel(ABC):
     @abstractmethod
     def name(self) -> str:
         pass
-     
-
-class FinBERT(SentimentModel):
-    def __init__(self, device):
-        self.device = device
-        self.model = huggingface_sentiment_analysis_pipeline(
-            "ProsusAI/finbert", device
-        )
-
-    def __call__(self, sentence: str):
-        return self.model(sentence)
-    
-    @property
-    def name(self):
-        return "fin_bert"
 
 
 class TwitterRobertaBase(SentimentModel):
@@ -46,6 +32,21 @@ class TwitterRobertaBase(SentimentModel):
     @property
     def name(self):
         return "twitter_roberta_base"
+     
+
+class FinBERT(SentimentModel):
+    def __init__(self, device):
+        self.device = device
+        self.model = huggingface_sentiment_analysis_pipeline(
+            "ProsusAI/finbert", device
+        )
+
+    def __call__(self, sentence: str):
+        return self.model(sentence)
+    
+    @property
+    def name(self):
+        return "fin_bert"
 
 
 class DistilRoberta(SentimentModel):
