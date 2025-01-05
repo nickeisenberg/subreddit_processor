@@ -52,7 +52,7 @@ class SentimentProcessor(Processor):
                     sentiment_model=self.sentiment_model.name,
                     sentiment_label=sentiment_label,
                     sentiment_score=sentiment_score,
-                    tickers_mentioned=self.phrase_finder(processed_comment)
+                    phrases_mentioned=self.phrase_finder(processed_comment)
                 )
             )
 
