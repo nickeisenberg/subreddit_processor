@@ -4,7 +4,6 @@ from praw.models import MoreComments
 from praw.reddit import Submission
 
 import src.praw_tools as praw_tools
-from src.praw_tools import get_date_from_submission
 from src.process.callbacks import (
     Processor, 
     SentimentProcessor, 
@@ -14,18 +13,12 @@ from src.process.models.models import SentimentModel
 
 
 def submission_processor(submission: Submission, callbacks: Iterable[Processor]):
-    submission_id = submission.id
-    date = get_date_from_submission(submission)
-
     for praw_comment in praw_tools.get_comments_from_submission(submission):
         if isinstance(praw_comment, MoreComments):
             continue
 
         for callback in callbacks:
             callback(
-                date=date,
-                submission_id=submission_id,
-                comment_id=praw_comment.id,
                 comment=praw_comment
             )
 
@@ -42,7 +35,6 @@ def table_processor(table: pd.DataFrame, callbacks: Iterable[Processor]):
 
 def get_comments_from_submission(
         submission: Submission,
-        praw_comment_preprocesser: Callable[[str], str],
         add_comments_to_database: bool = False, 
         root: str | None = None):
 

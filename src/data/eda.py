@@ -14,10 +14,12 @@ def make_all_csv(root: str):
 
 def isolate_ticker(symbol: str):
     def ticker(x):
-        sym = symbol
-        if sym in x.split():
-            return sym
-        else:
+        try:
+            if symbol in x.split():
+                return symbol
+            else:
+                return "N/A"
+        except:
             return "N/A"
     return ticker
 

@@ -34,6 +34,11 @@ class Table(ABC):
     def table(self):
         return self._table
 
+    @property
+    @abstractmethod
+    def new_row(self) -> Any:
+        pass
+
     def add_row(self, row):
         if len(self._table) == 0:
             self._table = row.row
@@ -71,7 +76,7 @@ class SentimentRow(Row):
             "sentiment_model": self.sentiment_model,
             "sentiment_label": self.sentiment_label,
             "sentiment_score": self.sentiment_score,
-            "tickers_mentioned": self.phrases_mentioned 
+            "phrases_mentioned": self.phrases_mentioned 
         }
     
 
