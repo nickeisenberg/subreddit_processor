@@ -6,8 +6,8 @@ from praw.reddit import Submission
 import src.praw_tools as praw_tools
 from src.process.callbacks import (
     Processor, 
-    SentimentProcessor, 
-    CommentProcessor
+    CommentSenitment, 
+    CommentSaver 
 )
 from src.process.models.models import SentimentModel
 
@@ -41,7 +41,7 @@ def get_comments_from_submission(
     if add_comments_to_database and not root:
         raise Exception("root must be set")
 
-    comments = CommentProcessor()
+    comments = CommentSaver()
 
     _ = submission_processor(submission, [comments])
 
@@ -56,27 +56,23 @@ def get_sentiment_and_comments_from_submission(
         praw_comment_preprocesser: Callable[[str], str],
         sentiment_model: SentimentModel,
         phrase_finder: Callable[[str], Iterable[str]],
-        add_summary_to_database: bool = False, 
-        add_comments_to_database: bool = False, 
-        root: str | None = None):
-
-    if (add_comments_to_database or add_summary_to_database) and not root:
-        raise Exception("root must be set")
+        sentiment_database_root: str | None = None, 
+        comment_database_root: str | None = None):
     
-    sentiment = SentimentProcessor(
+    sentiment = CommentSenitment(
         praw_comment_preprocesser=praw_comment_preprocesser, 
         sentiment_model=sentiment_model,
         phrase_finder=phrase_finder
     )
-    comments = CommentProcessor()
+    comments = CommentSaver()
 
     _ = submission_processor(submission, [sentiment, comments])
 
-    if add_comments_to_database and root is not None:
-        comments.comments.write(root)
+    if comment_database_root is not None:
+        comments.comments.write(comment_database_root)
 
-    if add_summary_to_database and root is not None:
-        sentiment.sentiment.write(root)
+    if sentiment_database_root is not None:
+        sentiment.sentiment.write(sentiment_database_root)
 
     return sentiment.sentiment, comments.comments
 
@@ -91,7 +87,7 @@ def get_sentiment_from_table(
     if add_summary_to_database and not root:
         raise Exception("root must be set")
     
-    sentiment = SentimentProcessor(
+    sentiment = CommentSenitment(
         praw_comment_preprocesser=praw_comment_preprocesser, 
         sentiment_model=sentiment_model,
         phrase_finder=phrase_finder

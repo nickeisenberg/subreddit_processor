@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import Literal
 from praw import Reddit
 from praw.reddit import Comment, Submission, Subreddit
 import os
@@ -14,36 +15,29 @@ def get_reddit_client(client_id: str = os.environ["PRAW_CLIENT_ID"],
         )
 
 
-def get_submission_list_from_subreddit(subreddit: Subreddit,
-                                       sort_by: str ='top',
-                                       search: str | None  = None,
-                                       search_sort_by: str = 'relevance',
-                                       no_of_submissions: int = 10):
+def get_submission_list_from_subreddit(
+        subreddit: Subreddit,
+        sort_by: Literal['top', 'hot', 'new', 'rising'],
+        no_of_submissions: int = 10,
+        time_filter: Literal["all", "day", "hour", "month", "week"] = "all"):
     """
-    Returns a list of praw Submissions from a praw Subreddit
+    Returns a list of praw Submissions from a praw Subreddit. time_filter is
+    only for sort_by='top'.
     """
 
-    print('starting submission getter')
-
-    if isinstance(search, str):
-        submissions = subreddit.search(search, sort=search_sort_by)
-    elif sort_by == 'top':
-        submissions = subreddit.top(limit=no_of_submissions)
+    if sort_by == 'top':
+        submissions = subreddit.top(
+            limit=no_of_submissions,
+            time_filter=time_filter
+        )
     elif sort_by == 'hot':
         submissions = subreddit.hot(limit=no_of_submissions)
     elif sort_by == 'new':
         submissions = subreddit.new(limit=no_of_submissions)
     elif sort_by == 'rising':
         submissions = subreddit.rising(limit=no_of_submissions)
-    else:
-        raise Exception("")
 
-    submission_list: list[Submission] = []
-    for _, sub in enumerate(submissions):
-        submission_list.append(sub)
-        if len(submission_list) == no_of_submissions:
-            break
-    return submission_list
+    return list(submissions) 
 
 
 def get_submission_list_by_search(subreddit: Subreddit,
@@ -110,3 +104,7 @@ def get_date_from_submission(submission: Submission):
 
 def get_ymd_date_from_comment(comment: Comment):
     return dt.datetime.fromtimestamp(comment.created).strftime("%Y-%m-%d")
+
+
+def get_ymd_date_from_submission(submission: Submission):
+    return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")

@@ -16,18 +16,6 @@ from src.process.process import (
 )
 
 
-def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 
-                            name_to_symbol_map: dict) -> list[str]:
-    x = []
-    for word in lower_text_and_remove_all_non_asci(sentence).split():
-        word = word.lower()
-        if word in symbol_to_name_map:
-            x.append(symbol_to_name_map[word])
-        elif word in name_to_symbol_map:
-            x.append(name_to_symbol_map[word])
-    return list(set(x))
-
-
 def make_ticker_and_name_map(top: int):
     sym_to_sym = {}
     name_to_sym = {}
@@ -41,6 +29,18 @@ def make_ticker_and_name_map(top: int):
         sym_to_sym[sym] = sym
         name_to_sym[name] = sym
     return sym_to_sym, name_to_sym
+
+
+def get_tickers_from_string(sentence: str, symbol_to_name_map: dict, 
+                            name_to_symbol_map: dict) -> list[str]:
+    x = []
+    for word in lower_text_and_remove_all_non_asci(sentence).split():
+        word = word.lower()
+        if word in symbol_to_name_map:
+            x.append(symbol_to_name_map[word])
+        elif word in name_to_symbol_map:
+            x.append(name_to_symbol_map[word])
+    return list(set(x))
 
 
 def get_crypto_ticker_finder(top: int) -> Callable[[str], list[str]]:

@@ -139,14 +139,14 @@ if __name__ == "__main__":
     pass
 
     from src.praw_tools import get_reddit_client 
-    from src.sentiment_models.models import get_finbert
+    from src.process.models.models import FinBERT 
     from src.text_processing import default_comment_processer
 
     reddit = get_reddit_client()
     
     path = "/home/nicholas/gitrepos/ticker_sentiment/data/stock_market/ticker_database/american_equities.csv"
     finder = get_ticker_finder(path)
-    finbert = get_finbert("cuda")
+    finbert = FinBERT("cuda")
     
     sum, coms = wsb_daily_discussion_summarization(
         reddit=reddit, 

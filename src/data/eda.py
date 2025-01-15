@@ -1,3 +1,4 @@
+import datetime as dt
 from copy import deepcopy
 import os
 import numpy as np
@@ -12,43 +13,60 @@ def make_all_csv(root: str):
     return pd.concat(dfs).sort_values("date")
 
 
-def isolate_ticker(symbol: str):
-    def ticker(x):
+def missing_days(root, include_today: bool = False):
+    files = os.listdir(root)
+    dts = sorted([dt.datetime.strptime(x.split("_")[0], "%Y-%m-%d") for x in files])
+    today = dt.datetime.strptime(dt.datetime.today().strftime("%Y-%m-%d"), "%Y-%m-%d")
+    dates = []
+    last = dts[-1]
+    while last < today:
+        last += dt.timedelta(days=1)
+        dates.append(last.strftime("%Y-%m-%d"))
+    if include_today:
+        return dates
+    else:
+        return dates[:-1]
+
+
+def isolate_phrase(phrase: str):
+    def _phrase(x: str):
         try:
-            if symbol in x.split():
-                return symbol
+            if phrase in x.split():
+                return phrase
             else:
                 return "N/A"
         except:
             return "N/A"
-    return ticker
+    return _phrase 
 
 
-def replace_tickers_mentioned_with_one_ticker(df: pd.DataFrame, ticker: str):
+def replace_phrases_mentioned_with_one_phrase(df: pd.DataFrame, ticker: str):
     _df = deepcopy(df)
-    _df["tickers_mentioned"] = df["tickers_mentioned"].map(isolate_ticker(ticker)) 
-    return _df.loc[_df["tickers_mentioned"] != "N/A"]
+    _df["phrases_mentioned"] = df["phrases_mentioned"].map(isolate_phrase(ticker)) 
+    return _df.loc[_df["phrases_mentioned"] != "N/A"]
 
 
 def get_ticker_counts_from_summarization(summarization: pd.DataFrame):
-    x = " ".join(summarization["tickers_mentioned"].to_numpy()).replace(",", "").replace("N/A", "").split()
+    x = " ".join(
+        summarization["phrases_mentioned"].to_numpy()
+    ).replace(",", "").replace("N/A", "").split()
     return pd.Series(x).value_counts().to_dict()
 
 
 def get_ticker_counts_by_date(df: pd.DataFrame, ticker: str):
-    tick_df: pd.DataFrame = replace_tickers_mentioned_with_one_ticker(df, ticker)
-    return tick_df.groupby("date")["tickers_mentioned"].count()
+    tick_df: pd.DataFrame = replace_phrases_mentioned_with_one_phrase(df, ticker)
+    return tick_df.groupby("date")["phrases_mentioned"].count()
 
 
 def get_pos_neutral_neg_from_daily(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
-        df = replace_tickers_mentioned_with_one_ticker(df, ticker)
+        df = replace_phrases_mentioned_with_one_phrase(df, ticker)
     return df.groupby("sentiment_label")["sentiment_score"].mean()
 
 
 def get_pos_neutral_neg_by_date(df: pd.DataFrame, ticker: str | None = None):
     if ticker:
-        df = replace_tickers_mentioned_with_one_ticker(df, ticker)
+        df = replace_phrases_mentioned_with_one_phrase(df, ticker)
     return df.groupby(["date", "sentiment_label"])["sentiment_score"].mean()
 
 
