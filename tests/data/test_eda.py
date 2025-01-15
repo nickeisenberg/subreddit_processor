@@ -1,7 +1,4 @@
-from tqdm import tqdm
-import pandas as pd
 import os
-
 import src.data.eda as eda
 
 def get_all_for_tests():
