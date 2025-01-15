@@ -38,4 +38,4 @@ def main():
             sentiment_database_root=sent_root
         )
 
-main()
+# main()

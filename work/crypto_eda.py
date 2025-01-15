@@ -19,4 +19,4 @@ all_twit, all_finbert = get_all_for_tests()
 def plot_sentiment_and_close(ticker:str, all):
     eda.plot_sentiment_and_close(all, ticker)
 
-plot_sentiment_and_close("ada", all_twit)
+plot_sentiment_and_close("vet", all_twit)
