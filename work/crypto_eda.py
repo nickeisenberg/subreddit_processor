@@ -16,7 +16,4 @@ def get_all_for_tests():
 
 all_twit, all_finbert = get_all_for_tests()
 
-def plot_sentiment_and_close(ticker:str, all):
-    eda.plot_sentiment_and_close(all, ticker)
-
-plot_sentiment_and_close("vet", all_twit)
+eda.plot_sentiment_and_close(all_twit, "ada", sentiment_on_ticker=True)

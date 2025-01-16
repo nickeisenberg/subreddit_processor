@@ -104,8 +104,12 @@ def get_ticker_close(ticker: str, start_date: str, end_date: str):
         raise Exception("Ticker not found")
 
 
-def get_close_and_sentiment_df(df: pd.DataFrame, ticker: str):
-    sent = get_sentiment_sum_by_date(df, ticker)
+def get_close_and_sentiment_df(df: pd.DataFrame, ticker: str, 
+                               sentiment_on_ticker: bool = False,):
+    if sentiment_on_ticker:
+        sent = get_sentiment_sum_by_date(df, ticker)
+    else:
+        sent = get_sentiment_sum_by_date(df)
     # start_date = str(sent["date"].min()).replace("_", "-")
     # end_date = str(sent["date"].max()).replace("_", "-")
     start_date = str(sent["date"].min())
@@ -114,8 +118,18 @@ def get_close_and_sentiment_df(df: pd.DataFrame, ticker: str):
     return pd.merge(sent, close, on="date")
 
 
-def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, plot: bool = True):
-    combined_sent_and_close = get_close_and_sentiment_df(df, ticker)
+def plot_sentiment_and_close(df: pd.DataFrame, ticker: str, 
+                             sentiment_on_ticker: bool = False, 
+                             plot: bool = True):
+    if sentiment_on_ticker:
+        combined_sent_and_close = get_close_and_sentiment_df(
+            df=df, ticker=ticker, sentiment_on_ticker=sentiment_on_ticker
+        )
+    else:
+        combined_sent_and_close = get_close_and_sentiment_df(
+            df=df, ticker=ticker, sentiment_on_ticker=sentiment_on_ticker
+        )
+
     dates = pd.to_datetime(combined_sent_and_close["date"]).to_numpy()
     
     close = combined_sent_and_close[ticker].to_numpy()
