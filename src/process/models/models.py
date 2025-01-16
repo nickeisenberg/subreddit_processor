@@ -46,7 +46,7 @@ class FinBERT(SentimentModel):
     
     @property
     def name(self):
-        return "fin_bert"
+        return "finbert"
 
 
 class DistilRoberta(SentimentModel):

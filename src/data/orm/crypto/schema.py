@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 
-class Database:
+class DailyDiscussion:
     def __init__(self):
         self._base = None
         self._comments = None
@@ -12,7 +12,7 @@ class Database:
         self._session = None
         self._engine = None
 
-    def start_session(self, engine='sqlite:///example.db'):
+    def start_session(self, engine='sqlite:///database/crypto/daily_discussions/daily_discussion.db'):
         self._engine = create_engine(engine)
         self._session = sessionmaker(bind=self.engine)()
         _ = self.comments
@@ -45,11 +45,12 @@ class Database:
         self.session.commit()
 
     def add_row_to_sentiment(self, submission_id, comment_id, date,
-                             sentiment_model, sentiment_label, sentiment_score):
+                             sentiment_model, sentiment_label, sentiment_score,
+                             tickers_mentioned):
         row = self.sentiment(
             submission_id=submission_id, comment_id=comment_id, date=date,
             sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
-            sentiment_score=sentiment_score
+            sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
         )
         self.session.add(row)
         self.session.commit()
@@ -71,27 +72,29 @@ def get_comments(base):
     class Comments(base):
         __tablename__ = 'comments'
         submission_id = db.Column(db.String, primary_key=True)
-        comment_id = db.Column(db.Integer, primary_key=True)
+        comment_id = db.Column(db.String, primary_key=True)
         date = db.Column(db.String, autoincrement=True)
-        comment = db.Column(db.String, nullable=False)
+        comment = db.Column(db.String, nullable=True)
     return Comments
 
 
 def get_sentiment(base):
     class Sentiment(base):
         __tablename__ = 'sentiment'
-        submission_id = db.Column(db.String, nullable=False, primary_key=True)
-        comment_id = db.Column(db.Integer, nullable=True, primary_key=True)
+        submission_id = db.Column(db.String, primary_key=True)
+        comment_id = db.Column(db.String, primary_key=True)
         date = db.Column(db.String)
-        sentiment_model = db.Column(db.String)
+        sentiment_model = db.Column(db.String, primary_key=True)
         sentiment_label = db.Column(db.String)
         sentiment_score = db.Column(db.Float)
+        tickers_mentioned = db.Column(db.String, nullable=True)
     return Sentiment
 
-database = Database()
-database.start_session()
 
-# # Query the database
-# users = session.query(User).all()
-# for user in users:
-#     print(user.name, user.age, user.email)
+if __name__ == "__main__":
+    database = DailyDiscussion()
+    database.start_session(
+        engine='sqlite:///database/crypto/daily_discussions/daily_discussion.db'
+    )
+    database.add_row_to_sentiment("a", "aa", "2024-01-01", "hello", "pos", .1, None)
+    database.add_row_to_sentiment("a", "aa", "2024-01-01", "bye", "pos", .1, None)
