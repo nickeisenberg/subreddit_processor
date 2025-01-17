@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine
 import sqlalchemy as db
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm.decl_api import DeclarativeMeta
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.orm.session import Session
 
 
 class DailyDiscussion:
@@ -20,25 +22,39 @@ class DailyDiscussion:
         self.base.metadata.create_all(self.engine)
     
     @property
-    def engine(self):
+    def engine(self) -> Engine:
         if not self._engine:
             raise Exception("session is not yet started") 
         return self._engine
     
     @property
-    def session(self) -> db.orm.Session:
+    def session(self) -> Session:
         if not self._session:
             raise Exception("session is not yet started") 
         return self._session
 
     @property
-    def base(self):
+    def base(self) -> DeclarativeMeta:
         if self._base is None:
             self._base = declarative_base()
         return self._base
 
-    def add_row_to_comments(self, submission_id, comment_id, date, comment):
-        row = self.comments(
+    def sentiment_row(self, submission_id, comment_id, date,
+                      sentiment_model, sentiment_label, sentiment_score,
+                      tickers_mentioned):
+        return self.sentiment(
+            submission_id=submission_id, comment_id=comment_id, date=date,
+            sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
+            sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
+        )
+
+    def comments_row(self, submission_id, comment_id, date, comment):
+        return self.comments(
+            submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
+        )
+
+    def add_row_to_database(self, submission_id, comment_id, date, comment):
+        row = self.comments_row(
             submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
         )
         try:
@@ -50,7 +66,7 @@ class DailyDiscussion:
     def add_row_to_sentiment(self, submission_id, comment_id, date,
                              sentiment_model, sentiment_label, sentiment_score,
                              tickers_mentioned):
-        row = self.sentiment(
+        row = self.sentiment_row(
             submission_id=submission_id, comment_id=comment_id, date=date,
             sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
             sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
@@ -82,6 +98,10 @@ def get_comments(base):
         date = db.Column(db.String, autoincrement=True)
         comment = db.Column(db.String, nullable=True)
     return Comments
+
+type(declarative_base())
+
+declarative_base()
 
 
 def get_sentiment(base):
