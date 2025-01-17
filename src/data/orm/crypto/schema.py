@@ -6,6 +6,29 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm.session import Session
 
 
+def get_comments(base) -> DeclarativeMeta:
+    class Comments(base):
+        __tablename__ = 'comments'
+        submission_id = db.Column(db.String, primary_key=True)
+        comment_id = db.Column(db.String, primary_key=True)
+        date = db.Column(db.String, autoincrement=True)
+        comment = db.Column(db.String, nullable=True)
+    return Comments
+
+
+def get_sentiment(base) -> DeclarativeMeta:
+    class Sentiment(base):
+        __tablename__ = 'sentiment'
+        submission_id = db.Column(db.String, primary_key=True)
+        comment_id = db.Column(db.String, primary_key=True)
+        date = db.Column(db.String)
+        sentiment_model = db.Column(db.String, primary_key=True)
+        sentiment_label = db.Column(db.String)
+        sentiment_score = db.Column(db.Float)
+        tickers_mentioned = db.Column(db.String, nullable=True)
+    return Sentiment
+
+
 class DailyDiscussion:
     def __init__(self):
         self._base = None
@@ -53,29 +76,25 @@ class DailyDiscussion:
             submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
         )
 
-    def add_row_to_database(self, submission_id, comment_id, date, comment):
-        row = self.comments_row(
-            submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
-        )
+    def add_row_to_database(self, row):
         try:
             self.session.add(row)
             self.session.commit()
-        except:
+        except Exception as e:
+            print(e)
             self.session.rollback()
 
-    def add_row_to_sentiment(self, submission_id, comment_id, date,
-                             sentiment_model, sentiment_label, sentiment_score,
-                             tickers_mentioned):
-        row = self.sentiment_row(
-            submission_id=submission_id, comment_id=comment_id, date=date,
-            sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
-            sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
-        )
-        try:
-            self.session.add(row)
-            self.session.commit()
-        except:
-            self.session.rollback()
+    def add_rows_to_database(self, rows: list):
+        num_successful_rows = 0
+        for row in rows:
+            try:
+                self.session.add(row)
+                self.session.flush()
+                num_successful_rows += 1
+            except:
+                self.session.rollback()
+        self.session.commit()
+        print(f"{num_successful_rows} / {len(rows)} rows were made")
 
     @property
     def comments(self):
@@ -88,33 +107,6 @@ class DailyDiscussion:
         if self._sentiment is None:
             self._sentiment = get_sentiment(self.base)
         return self._sentiment
-
-
-def get_comments(base):
-    class Comments(base):
-        __tablename__ = 'comments'
-        submission_id = db.Column(db.String, primary_key=True)
-        comment_id = db.Column(db.String, primary_key=True)
-        date = db.Column(db.String, autoincrement=True)
-        comment = db.Column(db.String, nullable=True)
-    return Comments
-
-type(declarative_base())
-
-declarative_base()
-
-
-def get_sentiment(base):
-    class Sentiment(base):
-        __tablename__ = 'sentiment'
-        submission_id = db.Column(db.String, primary_key=True)
-        comment_id = db.Column(db.String, primary_key=True)
-        date = db.Column(db.String)
-        sentiment_model = db.Column(db.String, primary_key=True)
-        sentiment_label = db.Column(db.String)
-        sentiment_score = db.Column(db.Float)
-        tickers_mentioned = db.Column(db.String, nullable=True)
-    return Sentiment
 
 
 if __name__ == "__main__":
