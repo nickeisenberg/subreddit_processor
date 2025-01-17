@@ -1,4 +1,7 @@
-from src.data.orm.crypto.schema import DailyDiscussion
+try:
+    from src.data.orm.crypto.schema import DailyDiscussion
+except:
+    from ....src.data.orm.crypto.schema import DailyDiscussion
 from tqdm import tqdm
 import pandas as pd
 import os
@@ -21,6 +24,7 @@ def setup_comments():
             date=row["date"], 
             comment=row["comment"]
         )
+
 
 def setup_twit():
     root = "/home/nicholas/gitrepos/subreddit_processor/database/crypto/daily_discussions/individual/sentiment_twitter"
@@ -66,8 +70,8 @@ def setup_finbert():
             exceptions.append(idx)
 
 
-# setup_finbert()
-# setup_twit()
+setup_finbert()
+setup_twit()
 
 result = pd.read_sql(
     "select * from sentiment", 

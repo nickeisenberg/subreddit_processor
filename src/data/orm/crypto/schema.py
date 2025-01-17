@@ -40,9 +40,12 @@ class DailyDiscussion:
     def add_row_to_comments(self, submission_id, comment_id, date, comment):
         row = self.comments(
             submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
-        ) 
-        self.session.add(row)
-        self.session.commit()
+        )
+        try:
+            self.session.add(row)
+            self.session.commit()
+        except:
+            self.session.rollback()
 
     def add_row_to_sentiment(self, submission_id, comment_id, date,
                              sentiment_model, sentiment_label, sentiment_score,
@@ -52,8 +55,11 @@ class DailyDiscussion:
             sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
             sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
         )
-        self.session.add(row)
-        self.session.commit()
+        try:
+            self.session.add(row)
+            self.session.commit()
+        except:
+            self.session.rollback()
 
     @property
     def comments(self):
