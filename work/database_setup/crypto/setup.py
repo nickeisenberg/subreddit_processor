@@ -1,7 +1,7 @@
-try:
-    from src.data.orm.crypto.schema import DailyDiscussion
-except:
-    from ....src.data.orm.crypto.schema import DailyDiscussion
+from src.data.orm.crypto.schema import DailyDiscussion
+from src.data.orm.crypto.schema import check_sentiment, check_comment
+
+import numpy as np
 from tqdm import tqdm
 import pandas as pd
 import os
@@ -31,21 +31,21 @@ def setup_twit():
     paths = [os.path.join(root, x) for x in os.listdir(root)]
     twit_sentiment_dfs = [pd.read_csv(path, index_col=0) for path in paths]
     twit_sentiment_df = pd.concat(twit_sentiment_dfs)
-    
-    exceptions = []
-    for idx, row in tqdm(twit_sentiment_df.iterrows()):
-        try:
-            database.add_row_to_sentiment(
-                submission_id=row["submission_id"],
-                comment_id=row["comment_id"],
-                date=row["date"],
-                sentiment_model=row["sentiment_model"],
-                sentiment_score=row["sentiment_score"],
-                sentiment_label=row["sentiment_label"],
-                tickers_mentioned=row["phrases_mentioned"]
-            )
-        except Exception as e:
-            exceptions.append(idx)
+    print("saving rows")
+    rows = []
+    pbar = tqdm(twit_sentiment_df.iterrows(), total=len(twit_sentiment_df))
+    for _, row in pbar:
+        rows.append(database.sentiment_row(
+            submission_id=row.submission_id,
+            comment_id=row.comment_id,
+            date=row.date,
+            sentiment_model=row.sentiment_model,
+            sentiment_score=row.sentiment_score,
+            sentiment_label=row.sentiment_label,
+            tickers_mentioned=row.phrases_mentioned
+        ))
+    print("committing rows")
+    database.add_rows_to_database(rows, check_sentiment)
 
 
 def setup_finbert():
@@ -53,25 +53,24 @@ def setup_finbert():
     paths = [os.path.join(root, x) for x in os.listdir(root)]
     finbert_sentiment_dfs = [pd.read_csv(path, index_col=0) for path in paths]
     finbert_sentiment_df = pd.concat(finbert_sentiment_dfs)
-    
-    exceptions = []
-    for idx, row in tqdm(finbert_sentiment_df.iterrows()):
-        try:
-            database.add_row_to_sentiment(
-                submission_id=row["submission_id"],
-                comment_id=row["comment_id"],
-                date=row["date"],
-                sentiment_model=row["sentiment_model"],
-                sentiment_score=row["sentiment_score"],
-                sentiment_label=row["sentiment_label"],
-                tickers_mentioned=row["phrases_mentioned"]
-            )
-        except Exception as e:
-            exceptions.append(idx)
+    print("saving rows")
+    rows = []
+    pbar = tqdm(finbert_sentiment_df.iterrows(), total=len(finbert_sentiment_df))
+    for _, row in pbar:
+        rows.append(database.sentiment_row(
+            submission_id=row.submission_id,
+            comment_id=row.comment_id,
+            date=row.date,
+            sentiment_model=row.sentiment_model,
+            sentiment_score=row.sentiment_score,
+            sentiment_label=row.sentiment_label,
+            tickers_mentioned=row.phrases_mentioned
+        ))
+    print("committing rows")
+    database.add_rows_to_database(rows, check_sentiment)
 
-
-setup_finbert()
-setup_twit()
+# setup_finbert()
+# setup_twit()
 
 result = pd.read_sql(
     "select * from sentiment", 
