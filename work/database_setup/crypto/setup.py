@@ -66,12 +66,14 @@ def setup_finbert():
     print("committing rows")
     database.add_rows_to_database(rows)
 
-setup_finbert()
+# setup_finbert()
 # setup_twit()
 
 result = pd.read_sql(
-    "select * from sentiment", 
+    "select * from sentiment where sentiment_model = 'twitter_roberta_base'", 
     database.engine
 )
+
+len(result)
 
 result["sentiment_model"].value_counts()
