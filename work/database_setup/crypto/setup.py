@@ -1,7 +1,4 @@
 from src.data.orm.crypto.schema import DailyDiscussion
-from src.data.orm.crypto.schema import check_sentiment, check_comment
-
-import numpy as np
 from tqdm import tqdm
 import pandas as pd
 import os
@@ -45,7 +42,7 @@ def setup_twit():
             tickers_mentioned=row.phrases_mentioned
         ))
     print("committing rows")
-    database.add_rows_to_database(rows, check_sentiment)
+    database.add_rows_to_database(rows)
 
 
 def setup_finbert():
@@ -67,9 +64,9 @@ def setup_finbert():
             tickers_mentioned=row.phrases_mentioned
         ))
     print("committing rows")
-    database.add_rows_to_database(rows, check_sentiment)
+    database.add_rows_to_database(rows)
 
-# setup_finbert()
+setup_finbert()
 # setup_twit()
 
 result = pd.read_sql(

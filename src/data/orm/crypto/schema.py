@@ -1,4 +1,4 @@
-from typing import Callable
+from collections import defaultdict
 from tqdm import tqdm
 import sqlalchemy as db
 from sqlalchemy import create_engine
@@ -7,7 +7,7 @@ from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm.session import Session
 from sqlalchemy.engine.base import Engine
 
-from src.data.orm.utils import check_query, check
+from src.data.orm.utils import check_if_primary_key_exists_in_db
 
 
 def get_comments(base) -> DeclarativeMeta:
@@ -18,11 +18,6 @@ def get_comments(base) -> DeclarativeMeta:
         date = db.Column(db.String, autoincrement=True)
         comment = db.Column(db.String, nullable=True)
     return Comments
-
-
-def check_comment(row: object, engine: Engine):
-    query = check_query(row, "comments", ["submission_id", "comment_id"])
-    return check(query, engine)
 
 
 def get_sentiment(base) -> DeclarativeMeta:
@@ -38,26 +33,20 @@ def get_sentiment(base) -> DeclarativeMeta:
     return Sentiment
 
 
-def check_sentiment(row: object, engine: Engine):
-    query = check_query(
-        row, "sentiment", ["submission_id", "comment_id", "sentiment_model"]
-    )
-    return check(query, engine)
-
-
 class DailyDiscussion:
     def __init__(self):
         self._base = None
-        self._comments = None
-        self._sentiment = None
         self._session = None
         self._engine = None
+        self._comments = get_comments(self.base)
+        self._sentiment = get_sentiment(self.base)
 
-    def start_session(self, engine='sqlite:///database/crypto/daily_discussions/daily_discussion.db'):
+    def start_session(self, 
+                      engine='sqlite:///database/crypto/daily_discussions/daily_discussion.db'):
         self._engine = create_engine(engine)
         self._session = sessionmaker(bind=self.engine)()
-        _ = self.comments
-        _ = self.sentiment
+        for table in self.tables:
+            _ = self.tables[table]
         self.base.metadata.create_all(self.engine)
     
     @property
@@ -78,32 +67,6 @@ class DailyDiscussion:
             self._base = declarative_base()
         return self._base
 
-    @property
-    def comments(self):
-        if self._comments is None:
-            self._comments = get_comments(self.base)
-        return self._comments
-    
-    @property
-    def sentiment(self):
-        if self._sentiment is None:
-            self._sentiment = get_sentiment(self.base)
-        return self._sentiment
-
-    def sentiment_row(self, submission_id: str, comment_id: str, date: str,
-                      sentiment_model: str, sentiment_label: str, 
-                      sentiment_score: float, tickers_mentioned: list[str]):
-        return self.sentiment(
-            submission_id=submission_id, comment_id=comment_id, date=date,
-            sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
-            sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
-        )
-
-    def comments_row(self, submission_id: str, comment_id: str, date:str, comment: str):
-        return self.comments(
-            submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
-        )
-
     def add_row_to_database(self, row: object):
         try:
             self.session.add(row)
@@ -112,20 +75,60 @@ class DailyDiscussion:
             print(e)
             self.session.rollback()
 
-    def add_rows_to_database(self, rows: list[object], check: Callable[[object, Engine], bool]):
+    def add_rows_to_database(self, rows: list[object]):
         pbar = tqdm(rows)
+        session_keys = defaultdict(int)
         num_successful_rows = 0
         num_fail_rows = 0
         for row in pbar:
-            if not check(row, self.engine):
+            table = row.__getattribute__("__table__")
+            table_primary_keys = [
+                x.name for x in table.primary_key
+            ]
+            table_name = table.name
+            row_primary_key_values = table_name + "-" + "-".join(
+                [
+                    str(row.__getattribute__(key)) 
+                    for key in table_primary_keys
+                ]
+            )
+            if check_if_primary_key_exists_in_db(row=row, 
+                                                 table_name=table_name, 
+                                                 primary_keys=table_primary_keys, 
+                                                 engine=self.engine):
                 num_fail_rows += 1
-                pbar.set_postfix(fail=num_fail_rows)
+                pbar.set_postfix(success=num_successful_rows, fail=num_fail_rows)
+            elif session_keys[row_primary_key_values] == 1:
+                num_fail_rows += 1
+                pbar.set_postfix(success=num_successful_rows, fail=num_fail_rows)
             else:
                 self.session.add(row)
+                session_keys[row_primary_key_values] = 1
                 num_successful_rows += 1
-                pbar.set_postfix(success=num_successful_rows)
+                pbar.set_postfix(success=num_successful_rows, fail=num_fail_rows)
         self.session.commit()
         print(f"{num_successful_rows} / {len(rows)} rows were made")
+
+    @property
+    def tables(self):
+        return {
+            "comments": self._comments,
+            "sentiment": self._sentiment
+        }
+
+    def sentiment_row(self, submission_id: str, comment_id: str, date: str,
+                      sentiment_model: str, sentiment_label: str, 
+                      sentiment_score: float, tickers_mentioned: list[str]):
+        return self.tables["sentiment"](
+            submission_id=submission_id, comment_id=comment_id, date=date,
+            sentiment_model=sentiment_model, sentiment_label=sentiment_label, 
+            sentiment_score=sentiment_score, tickers_mentioned=tickers_mentioned
+        )
+
+    def comments_row(self, submission_id: str, comment_id: str, date:str, comment: str):
+        return self.tables["comments"](
+            submission_id=submission_id, comment_id=comment_id, date=date, comment=comment
+        )
 
 
 if __name__ == "__main__":
@@ -141,4 +144,3 @@ if __name__ == "__main__":
     row = get_comments(declarative_base())(
         submission_id="a", comment_id="a", date="a", comment="a"
     )
-    check_query(row, "table_name", primary_keys)
