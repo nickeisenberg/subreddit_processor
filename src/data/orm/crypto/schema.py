@@ -80,32 +80,32 @@ class DailyDiscussion:
         session_keys = defaultdict(int)
         num_successful_rows = 0
         num_fail_rows = 0
+        print("adding the rows to the session")
         for row in pbar:
             table = row.__getattribute__("__table__")
-            table_primary_keys = [
-                x.name for x in table.primary_key
-            ]
             table_name = table.name
-            row_primary_key_values = table_name + "-" + "-".join(
+            row_primary_key_values = {
+                x.name: row.__getattribute__(x.name) for x in table.primary_key
+            }
+            row_primary_key_values_str = table_name + "-" + "-".join(
                 [
-                    str(row.__getattribute__(key)) 
-                    for key in table_primary_keys
+                    str(row_primary_key_values[key]) for key in row_primary_key_values 
                 ]
             )
-            if check_if_primary_key_exists_in_db(row=row, 
-                                                 table_name=table_name, 
-                                                 primary_keys=table_primary_keys, 
+            if check_if_primary_key_exists_in_db(table_name=table_name, 
+                                                 primary_keys=row_primary_key_values, 
                                                  engine=self.engine):
                 num_fail_rows += 1
                 pbar.set_postfix(success=num_successful_rows, fail=num_fail_rows)
-            elif session_keys[row_primary_key_values] == 1:
+            elif session_keys[row_primary_key_values_str] == 1:
                 num_fail_rows += 1
                 pbar.set_postfix(success=num_successful_rows, fail=num_fail_rows)
             else:
                 self.session.add(row)
-                session_keys[row_primary_key_values] = 1
+                session_keys[row_primary_key_values_str] = 1
                 num_successful_rows += 1
                 pbar.set_postfix(success=num_successful_rows, fail=num_fail_rows)
+        print("committing the session")
         self.session.commit()
         print(f"{num_successful_rows} / {len(rows)} rows were made")
 
