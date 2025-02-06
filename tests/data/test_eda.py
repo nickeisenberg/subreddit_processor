@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import src.data.eda as eda
 
 def get_all_for_tests():

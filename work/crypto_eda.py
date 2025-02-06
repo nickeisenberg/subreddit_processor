@@ -27,4 +27,6 @@ all_finbert = pd.read_sql(
     con=create_engine('sqlite:///database/crypto/daily_discussions/daily_discussion.db')
 ).rename({"tickers_mentioned": "phrases_mentioned"}, axis=1)
 
-eda.plot_sentiment_and_close(all_twit, "eth", sentiment_on_ticker=True)
+eda.plot_sentiment_and_close(all_twit, "btc", sentiment_on_ticker=True)
+
+eda.plot_sentiment_and_close(all_finbert, "btc", sentiment_on_ticker=True)
