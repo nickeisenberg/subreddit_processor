@@ -6,7 +6,7 @@ import pandas as pd
 
 def common_write(table: pd.DataFrame, root: str, overwrite: bool = False):
     columns = table.columns
-    if not "submission_id" in columns and not "date" in columns:
+    if "submission_id" not in columns and "date" not in columns:
         raise Exception("submission_id and date are not in the columns of summary")
     submission_id = table["submission_id"].values[0]
     date_str = table["date"].values[0]
