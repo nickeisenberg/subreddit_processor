@@ -6,7 +6,7 @@ logging.set_verbosity_error()
 
 from src.process.models.models import FinBERT
 from src.process.process import get_sentiment_and_comments_from_submission 
-from src.text_processing import default_comment_processer
+from src.text_processing import get_default_comment_processer
 from src.subreddits.crypto import (
     get_crypto_ticker_finder, 
     get_crypto_daily_discussion_submission
@@ -32,7 +32,7 @@ def main():
     
         _ = get_sentiment_and_comments_from_submission(
             submission=submission,
-            praw_comment_preprocesser=default_comment_processer(),
+            praw_comment_preprocesser=get_default_comment_processer(),
             sentiment_model=model,
             phrase_finder=ticker_finder,
             sentiment_database_root=sent_root

@@ -7,7 +7,7 @@ logging.set_verbosity_error()
 
 from src.process.models.models import TwitterRobertaBase 
 from src.process.process import get_sentiment_from_table 
-from src.text_processing import default_comment_processer
+from src.text_processing import get_default_comment_processer
 from src.subreddits.crypto import get_crypto_ticker_finder
 
 def main():
@@ -22,7 +22,7 @@ def main():
     for table in tqdm(tables):
         _ = get_sentiment_from_table(
             table=table,
-            praw_comment_preprocesser=default_comment_processer(),
+            praw_comment_preprocesser=get_default_comment_processer(),
             sentiment_model=model,
             phrase_finder=finder,
             add_summary_to_database=True,

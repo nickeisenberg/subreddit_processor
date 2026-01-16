@@ -6,7 +6,7 @@ from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm.session import Session
 from sqlalchemy.engine.base import Engine
 
-from src.data.orm.utils import check_if_primary_key_exists_in_db
+from .utils import check_if_primary_key_exists_in_db
 
 
 class Database(ABC):

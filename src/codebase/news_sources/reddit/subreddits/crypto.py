@@ -4,14 +4,15 @@ from praw import Reddit
 from praw.reddit import Submission
 from pycoingecko import CoinGeckoAPI
 
-from src.praw_tools import (
+from ..praw_tools import (
     get_submission_list_by_search,
 )
-from src.process.models.models import SentimentModel
-from src.text_processing import (
+
+from ....pipelines.models.models import SentimentModel
+from ....text_utils import (
     lower_text_and_remove_all_non_asci
 )
-from src.process.process import (
+from ....pipelines.process import (
     get_sentiment_and_comments_from_submission 
 )
 

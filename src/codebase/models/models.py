@@ -3,7 +3,7 @@ from typing import Callable, Literal
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from src.process.models.utils import huggingface_sentiment_analysis_pipeline
+from .utils import huggingface_sentiment_analysis_pipeline
 
 
 class SentimentModel(ABC):

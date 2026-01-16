@@ -3,13 +3,13 @@ import pandas as pd
 from praw.models import MoreComments
 from praw.reddit import Submission
 
-import src.praw_tools as praw_tools
-from src.process.callbacks import Processor, CommentSenitment, CommentSaver
-from src.process.models.models import SentimentModel
+from ..news_sources.reddit.praw_tools import get_comments_from_submission
+from ..pipelines.callbacks import Processor, CommentSenitment, CommentSaver
+from ..models.models import SentimentModel
 
 
 def submission_processor(submission: Submission, callbacks: Iterable[Processor]):
-    for praw_comment in praw_tools.get_comments_from_submission(submission):
+    for praw_comment in get_comments_from_submission(submission):
         if isinstance(praw_comment, MoreComments):
             continue
 

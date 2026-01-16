@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-from src.data.orm.base import Database
+from ..base import Database
 
 
 def get_comments(base) -> DeclarativeMeta:

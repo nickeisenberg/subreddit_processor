@@ -3,10 +3,9 @@ from typing import Callable, Iterable
 
 from praw.reddit import Comment
 
-from src.process.models.models import SentimentModel
-from src.data.csv_orm import Comments, Sentiment
-from src.praw_tools import get_ymd_date_from_comment
-
+from ..models.models import SentimentModel
+from ..store.csv_orm import Comments, Sentiment
+from ..news_sources.reddit.praw_tools import get_ymd_date_from_comment
 
 class Processor(ABC):
     @abstractmethod

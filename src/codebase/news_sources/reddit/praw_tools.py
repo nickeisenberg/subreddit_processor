@@ -93,13 +93,9 @@ def get_comments_from_submission_id(
     )
 
 
-def get_date_from_submission(submission: Submission):
+def get_ymd_date_from_submission(submission: Submission):
     return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
 
 
 def get_ymd_date_from_comment(comment: Comment):
     return dt.datetime.fromtimestamp(comment.created).strftime("%Y-%m-%d")
-
-
-def get_ymd_date_from_submission(submission: Submission):
-    return dt.datetime.fromtimestamp(submission.created).strftime("%Y-%m-%d")
